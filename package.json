@@ -1,0 +1,206 @@
+{
+  "name": "vtex",
+  "displayName": "VTeX - Modern LaTeX Editor",
+  "description": "A modern, Overleaf-like LaTeX editing experience with hybrid build system support",
+  "version": "0.1.0",
+  "publisher": "vtex",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Other"
+  ],
+  "keywords": [
+    "latex",
+    "tex",
+    "pdf",
+    "typesetting",
+    "academic"
+  ],
+  "activationEvents": [
+    "onLanguage:latex",
+    "onLanguage:tex",
+    "workspaceContains:**/*.tex"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "latex",
+        "aliases": [
+          "LaTeX",
+          "latex"
+        ],
+        "extensions": [
+          ".tex",
+          ".sty",
+          ".cls",
+          ".bbx",
+          ".cbx"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "bibtex",
+        "aliases": [
+          "BibTeX",
+          "bibtex"
+        ],
+        "extensions": [
+          ".bib"
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "vtex.build",
+        "title": "VTeX: Build LaTeX Document",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "vtex.clean",
+        "title": "VTeX: Clean Auxiliary Files",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "vtex.viewPdf",
+        "title": "VTeX: View PDF",
+        "icon": "$(file-pdf)"
+      },
+      {
+        "command": "vtex.selectBuilder",
+        "title": "VTeX: Select Build Method (Local/Docker)",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "vtex.detectEnvironment",
+        "title": "VTeX: Detect LaTeX Environment"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "when": "resourceLangId == latex",
+          "command": "vtex.build",
+          "group": "navigation@1"
+        },
+        {
+          "when": "resourceLangId == latex",
+          "command": "vtex.viewPdf",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "vtex.build",
+          "when": "resourceLangId == latex"
+        },
+        {
+          "command": "vtex.clean",
+          "when": "resourceLangId == latex"
+        },
+        {
+          "command": "vtex.viewPdf",
+          "when": "resourceLangId == latex"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "VTeX",
+      "properties": {
+        "vtex.buildMethod": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "local",
+            "docker"
+          ],
+          "default": "auto",
+          "description": "Build method to use: 'auto' detects available system, 'local' uses local TeX Live, 'docker' uses containerized build"
+        },
+        "vtex.docker.image": {
+          "type": "string",
+          "default": "texlive/texlive:latest",
+          "description": "Docker image to use for containerized builds"
+        },
+        "vtex.docker.enableCache": {
+          "type": "boolean",
+          "default": true,
+          "description": "Cache LaTeX packages in a Docker volume for faster builds"
+        },
+        "vtex.buildOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically build LaTeX documents on save"
+        },
+        "vtex.buildEngine": {
+          "type": "string",
+          "enum": [
+            "latexmk",
+            "pdflatex",
+            "xelatex",
+            "lualatex"
+          ],
+          "default": "latexmk",
+          "description": "LaTeX engine to use for compilation"
+        },
+        "vtex.latexmk.options": {
+          "type": "array",
+          "default": [
+            "-pdf",
+            "-interaction=nonstopmode",
+            "-synctex=1",
+            "-file-line-error"
+          ],
+          "description": "Additional options to pass to latexmk"
+        },
+        "vtex.outputDirectory": {
+          "type": "string",
+          "default": "out",
+          "description": "Directory for build output (relative to workspace root)"
+        },
+        "vtex.rootFile": {
+          "type": "string",
+          "default": "",
+          "description": "Main LaTeX file for multi-file projects (leave empty for auto-detection)"
+        },
+        "vtex.showOutputChannel": {
+          "type": "string",
+          "enum": [
+            "never",
+            "onError",
+            "always"
+          ],
+          "default": "onError",
+          "description": "When to show the build output channel"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.56.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {}
+}

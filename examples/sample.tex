@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\title{VTeX Test Document}
+\author{VTeX Extension}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This is a test document for the VTeX extension. It demonstrates basic LaTeX compilation with the hybrid build system.
+
+\section{Mathematics}
+VTeX can compile documents with mathematical expressions:
+
+\subsection{Inline Math}
+The quadratic formula is $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$.
+
+\subsection{Display Math}
+The Pythagorean theorem:
+\[
+a^2 + b^2 = c^2
+\]
+
+An integral:
+\[
+\int_{0}^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
+\]
+
+\section{Lists}
+\subsection{Itemize}
+\begin{itemize}
+    \item First item
+    \item Second item
+    \item Third item with nested list:
+    \begin{itemize}
+        \item Nested item 1
+        \item Nested item 2
+    \end{itemize}
+\end{itemize}
+
+\subsection{Enumerate}
+\begin{enumerate}
+    \item First numbered item
+    \item Second numbered item
+    \item Third numbered item
+\end{enumerate}
+
+\section{Text Formatting}
+This is \textbf{bold text}, this is \textit{italic text}, and this is \texttt{monospace text}.
+
+\section{Conclusion}
+If you can see this document compiled to PDF, your VTeX build system is working correctly!
+
+\end{document}
