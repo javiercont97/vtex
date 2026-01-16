@@ -3,9 +3,11 @@ import { BuildSystem } from './buildSystem/builder';
 import { PDFPreview } from './preview/pdfPreview';
 import { Config } from './utils/config';
 import { Logger } from './utils/logger';
+import { TexlabClient } from './lsp/texlabClient';
 
 let buildSystem: BuildSystem;
 let pdfPreview: PDFPreview;
+let texlabClient: TexlabClient;
 let outputChannel: vscode.OutputChannel;
 let logger: Logger;
 
@@ -29,6 +31,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Initialize PDF preview
     pdfPreview = new PDFPreview(context, logger);
+
+    // Initialize LSP client
+    texlabClient = new TexlabClient(context, logger);
+    texlabClient.start().catch(error => {
+        logger.error(`Failed to start LSP client: ${error}`);
+    });
 
     // Register commands
     registerCommands(context);
@@ -190,6 +198,9 @@ async function buildDocument(document: vscode.TextDocument): Promise<void> {
 }
 
 export function deactivate() {
+    if (texlabClient) {
+        texlabClient.stop();
+    }
     if (outputChannel) {
         outputChannel.dispose();
     }

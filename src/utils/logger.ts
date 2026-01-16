@@ -25,4 +25,8 @@ export class Logger {
     hide(): void {
         this.outputChannel.hide();
     }
+
+    getOutputChannel(): vscode.OutputChannel {
+        return this.outputChannel;
+    }
 }

@@ -28,21 +28,23 @@ Create a modern, Overleaf-like LaTeX editing experience for VS Code with local-f
 
 ---
 
-## Phase 1: MVP - Build System & Preview (Current)
+## Phase 1: MVP - Build System & Preview ✅ COMPLETE
 **Goal**: Basic editing, compilation, and preview functionality
 
 ### Features
 - [x] Extension scaffolding
-- [ ] Build system detection (local TeX vs Docker)
-- [ ] Configuration system for build preferences
-- [ ] LaTeX file compilation (latexmk/pdflatex)
-- [ ] Docker build integration
-- [ ] Error log parsing
-- [ ] Basic error diagnostics display
-- [ ] PDF preview integration
-- [ ] Build on save (with debouncing)
-- [ ] Status bar indicators
-- [ ] Output channel for build logs
+- [x] Build system detection (local TeX vs Docker)
+- [x] Configuration system for build preferences
+- [x] LaTeX file compilation (latexmk/pdflatex/xelatex/lualatex)
+- [x] Docker build integration with volume caching
+- [x] Error log parsing
+- [x] Basic error diagnostics display
+- [x] PDF preview integration (custom WebView with PDF.js)
+- [x] Build on save (with debouncing)
+- [x] Status bar indicators
+- [x] Output channel for build logs
+- [x] WSL compatibility
+- [x] Focus management (non-intrusive updates)
 
 ### Architecture
 ```
@@ -71,21 +73,22 @@ extension/
 
 ---
 
-## Phase 2: LSP Integration & Enhanced Editing
+## Phase 2: LSP Integration & Enhanced Editing (Current)
 **Goal**: Professional-grade editing experience
 
 ### Features
-- [ ] Integrate texlab LSP server
+- [ ] Integrate texlab LSP server (auto-download or bundle)
 - [ ] Auto-completion for LaTeX commands
 - [ ] Snippet library (common environments, math symbols)
 - [ ] Syntax highlighting enhancements
-- [ ] Forward search (editor → PDF)
-- [ ] Inverse search (PDF → editor)
+- [ ] Forward search (editor → PDF) with SyncTeX
+- [ ] Inverse search (PDF → editor) with SyncTeX
 - [ ] Document outline/structure view
 - [ ] Reference management (labels, citations)
 - [ ] Symbol picker UI
 - [ ] Math preview on hover
 - [ ] Workspace symbol search
+- [ ] Diagnostics integration (show errors inline)
 
 ### Integration Points
 - texlab binary bundled or auto-downloaded
@@ -185,6 +188,13 @@ extension/
 - Using VS Code native PDF viewer initially
 - Target Linux first, multi-platform later
 - Compete with LaTeX Workshop (better templates, no dev containers)
+
+### 2026-01-16: Phase 1 Complete
+- Implemented custom PDF viewer with PDF.js (better than native)
+- Solved WSL compatibility with base64 data URIs
+- Added focus management for non-intrusive workflow
+- All Phase 1 features complete and tested
+- Moving to Phase 2: LSP Integration
 
 ---
 

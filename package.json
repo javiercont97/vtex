@@ -175,6 +175,16 @@
           ],
           "default": "onError",
           "description": "When to show the build output channel"
+        },
+        "vtex.texlab.path": {
+          "type": "string",
+          "default": "",
+          "description": "Custom path to texlab LSP server binary (leave empty for auto-detection)"
+        },
+        "vtex.lsp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable LaTeX language server (texlab) for auto-completion and navigation"
         }
       }
     }
@@ -201,5 +211,8 @@
     "typescript": "^5.3.3",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
   }
 }
