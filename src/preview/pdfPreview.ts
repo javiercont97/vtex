@@ -222,6 +222,9 @@ export class PDFPreview {
     </div>
 
     <script>
+        // Acquire VS Code API once and reuse it
+        const vscode = acquireVsCodeApi();
+        
         const pdfUrl = '${pdfDataUri}';
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         
@@ -324,7 +327,6 @@ export class PDFPreview {
 
         // Forward search button
         document.getElementById('forwardSearch').addEventListener('click', () => {
-            const vscode = acquireVsCodeApi();
             vscode.postMessage({ type: 'triggerForwardSearch' });
         });
         
@@ -379,7 +381,6 @@ export class PDFPreview {
                 const pdfY = viewport.height / scale - (y / scale);
                 
                 // Send inverse search request to extension
-                const vscode = acquireVsCodeApi();
                 vscode.postMessage({
                     type: 'inverseSearch',
                     page: currentPage,
