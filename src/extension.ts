@@ -4,6 +4,7 @@ import { PDFPreview } from './preview/pdfPreview';
 import { Config } from './utils/config';
 import { Logger } from './utils/logger';
 import { TexlabClient } from './lsp/texlabClient';
+import { TexlabInstaller } from './lsp/texlabInstaller';
 
 let buildSystem: BuildSystem;
 let pdfPreview: PDFPreview;
@@ -31,6 +32,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Initialize PDF preview
     pdfPreview = new PDFPreview(context, logger);
+
+    // Initialize texlab installer and prompt if needed (non-blocking)
+    const texlabInstaller = new TexlabInstaller(context);
+    texlabInstaller.promptInstallIfNeeded().catch(error => {
+        logger.error(`Failed to prompt texlab installation: ${error}`);
+    });
 
     // Initialize LSP client
     texlabClient = new TexlabClient(context, logger);
@@ -116,6 +123,39 @@ function registerCommands(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('vtex.detectEnvironment', async () => {
             const info = await buildSystem.getEnvironmentInfo();
             vscode.window.showInformationMessage(info);
+        })
+    );
+
+    // Install/Update texlab command
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vtex.installTexlab', async () => {
+            const installer = new TexlabInstaller(context);
+            const currentVersion = installer.getInstalledVersion();
+            
+            let message = 'Install texlab LSP server?';
+            if (currentVersion) {
+                message = `texlab v${currentVersion} is currently installed. Update to latest version?`;
+            }
+            
+            const choice = await vscode.window.showInformationMessage(
+                message,
+                'Install',
+                'Cancel'
+            );
+            
+            if (choice === 'Install') {
+                const success = await installer.installOrUpdate();
+                if (success) {
+                    const action = await vscode.window.showInformationMessage(
+                        'texlab installed successfully! Reload window to activate?',
+                        'Reload',
+                        'Later'
+                    );
+                    if (action === 'Reload') {
+                        vscode.commands.executeCommand('workbench.action.reloadWindow');
+                    }
+                }
+            }
         })
     );
 }

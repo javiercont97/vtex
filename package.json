@@ -53,6 +53,12 @@
         ]
       }
     ],
+    "snippets": [
+      {
+        "language": "latex",
+        "path": "./snippets/latex.json"
+      }
+    ],
     "commands": [
       {
         "command": "vtex.build",
@@ -77,6 +83,10 @@
       {
         "command": "vtex.detectEnvironment",
         "title": "VTeX: Detect LaTeX Environment"
+      },
+      {
+        "command": "vtex.installTexlab",
+        "title": "VTeX: Install/Update texlab LSP Server"
       }
     ],
     "menus": {

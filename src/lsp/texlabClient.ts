@@ -108,6 +108,19 @@ export class TexlabClient {
     }
 
     private async findTexlab(): Promise<string | null> {
+        // Check if user has configured a custom path
+        const config = vscode.workspace.getConfiguration('vtex');
+        const customPath = config.get<string>('texlab.path');
+        if (customPath && await this.fileExists(customPath)) {
+            return customPath;
+        }
+
+        // Check bundled texlab in extension directory
+        const bundledPath = path.join(this.context.extensionPath, 'bin', 'texlab');
+        if (await this.fileExists(bundledPath)) {
+            return bundledPath;
+        }
+
         // Try to find texlab in PATH
         try {
             const { execFile } = require('child_process');
@@ -127,19 +140,6 @@ export class TexlabClient {
             } catch {
                 // texlab not in PATH
             }
-
-            // Check if user has configured a custom path
-            const config = vscode.workspace.getConfiguration('vtex');
-            const customPath = config.get<string>('texlab.path');
-            if (customPath && await this.fileExists(customPath)) {
-                return customPath;
-            }
-
-            // TODO: Check bundled texlab in extension directory
-            // const bundledPath = path.join(this.context.extensionPath, 'bin', 'texlab');
-            // if (await this.fileExists(bundledPath)) {
-            //     return bundledPath;
-            // }
 
             return null;
         } catch (error) {
