@@ -66,11 +66,21 @@ export class PDFPreview {
     }
 
     private updatePDFContent(panel: vscode.WebviewPanel, pdfPath: string): void {
-        const pdfUri = panel.webview.asWebviewUri(vscode.Uri.file(pdfPath));
-        panel.webview.html = this.getWebviewContent(pdfUri.toString());
+        try {
+            // Read PDF file as base64 to work with WSL and cross-platform scenarios
+            const pdfBuffer = fs.readFileSync(pdfPath);
+            const pdfBase64 = pdfBuffer.toString('base64');
+            const pdfDataUri = `data:application/pdf;base64,${pdfBase64}`;
+            
+            panel.webview.html = this.getWebviewContent(pdfDataUri);
+            this.logger.info(`PDF loaded: ${pdfPath} (${pdfBuffer.length} bytes)`);
+        } catch (error) {
+            this.logger.error(`Failed to read PDF file: ${error}`);
+            panel.webview.html = this.getErrorContent(`Failed to read PDF: ${error}`);
+        }
     }
 
-    private getWebviewContent(pdfUri: string): string {
+    private getWebviewContent(pdfDataUri: string): string {
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -178,7 +188,7 @@ export class PDFPreview {
     </div>
 
     <script>
-        const pdfUrl = '${pdfUri}';
+        const pdfUrl = '${pdfDataUri}';
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         
         let pdfDoc = null;
@@ -293,6 +303,72 @@ export class PDFPreview {
         // Initial load
         loadPDF();
     </script>
+</body>
+</html>`;
+    }
+
+    private getErrorContent(errorMessage: string): string {
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Preview Error</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e1e;
+            color: #cccccc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        
+        .error-container {
+            text-align: center;
+            padding: 40px;
+            max-width: 600px;
+        }
+        
+        .error-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #f48771;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .error-message {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">📄❌</div>
+        <h1>Failed to Load PDF</h1>
+        <p>The PDF file could not be loaded.</p>
+        <div class="error-message">${errorMessage}</div>
+        <p style="margin-top: 30px;">
+            Make sure the LaTeX document compiled successfully and try building again.
+        </p>
+    </div>
 </body>
 </html>`;
     }
