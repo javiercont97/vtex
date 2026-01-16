@@ -93,17 +93,41 @@ export class SyncTexHandler {
                 // Normalize the path - synctex might return relative paths or paths with different separators
                 let inputPath = result.input;
                 
+                this.logger.info(`Synctex returned input path: ${inputPath}`);
+                
                 // If path is relative, resolve it relative to the PDF directory
                 if (!path.isAbsolute(inputPath)) {
                     const pdfDir = path.dirname(pdfPath);
                     inputPath = path.resolve(pdfDir, inputPath);
+                    this.logger.info(`Resolved to absolute path: ${inputPath}`);
                 }
                 
                 // Normalize path separators for the current platform
                 inputPath = path.normalize(inputPath);
                 
+                // Try to find the file in the workspace first (better for WSL/remote scenarios)
+                let uri: vscode.Uri | undefined;
+                const workspaceFolders = vscode.workspace.workspaceFolders;
+                
+                if (workspaceFolders) {
+                    // Try to find the file by searching workspace folders
+                    const fileName = path.basename(inputPath);
+                    const files = await vscode.workspace.findFiles(`**/${fileName}`, null, 10);
+                    
+                    if (files.length > 0) {
+                        // Use the first match (or try to match the full path if possible)
+                        uri = files[0];
+                        this.logger.info(`Found file in workspace: ${uri.toString()}`);
+                    }
+                }
+                
+                // Fallback to direct file URI
+                if (!uri) {
+                    uri = vscode.Uri.file(inputPath);
+                    this.logger.info(`Using direct file URI: ${uri.toString()}`);
+                }
+                
                 // Open the file and jump to line
-                const uri = vscode.Uri.file(inputPath);
                 const document = await vscode.workspace.openTextDocument(uri);
                 const editor = await vscode.window.showTextDocument(document);
 
