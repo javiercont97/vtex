@@ -175,8 +175,8 @@ async function buildDocument(document: vscode.TextDocument): Promise<void> {
             logger.info('Build completed successfully');
             vscode.window.showInformationMessage('LaTeX build succeeded');
             
-            // Auto-show PDF if configured
-            // await pdfPreview.showPDF(document.uri);
+            // Auto-refresh PDF preview if it's already open
+            await pdfPreview.showPDF(document.uri);
         } else {
             logger.error('Build failed');
             logger.error(result.output);
