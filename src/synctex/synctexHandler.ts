@@ -136,7 +136,8 @@ export class SyncTexHandler {
                 baseCommand = `synctex view -i "${params.line}:0:${params.input}" -o "${params.output}"`;
             } else {
                 // Inverse search: PDF → source
-                baseCommand = `synctex edit -o "${params.output}:${params.page}:${params.x}:${params.y}"`;
+                // Format: synctex edit -o page:x:y:file (not file:page:x:y)
+                baseCommand = `synctex edit -o "${params.page}:${params.x}:${params.y}:${params.output}"`;
             }
 
             if (useDocker) {
