@@ -90,8 +90,20 @@ export class SyncTexHandler {
             });
 
             if (result && result.input) {
+                // Normalize the path - synctex might return relative paths or paths with different separators
+                let inputPath = result.input;
+                
+                // If path is relative, resolve it relative to the PDF directory
+                if (!path.isAbsolute(inputPath)) {
+                    const pdfDir = path.dirname(pdfPath);
+                    inputPath = path.resolve(pdfDir, inputPath);
+                }
+                
+                // Normalize path separators for the current platform
+                inputPath = path.normalize(inputPath);
+                
                 // Open the file and jump to line
-                const uri = vscode.Uri.file(result.input);
+                const uri = vscode.Uri.file(inputPath);
                 const document = await vscode.workspace.openTextDocument(uri);
                 const editor = await vscode.window.showTextDocument(document);
 
