@@ -31,15 +31,15 @@ export class PDFPreview {
             let panel = this.panels.get(panelKey);
 
             if (panel) {
-                // Panel exists, reveal it and update content
-                panel.reveal(vscode.ViewColumn.Beside);
+                // Panel exists, reveal it and update content (without stealing focus)
+                panel.reveal(vscode.ViewColumn.Beside, true);
                 this.updatePDFContent(panel, pdfPath);
             } else {
-                // Create new panel
+                // Create new panel (without stealing focus)
                 panel = vscode.window.createWebviewPanel(
                     'vtexPdfPreview',
                     `PDF: ${docName}`,
-                    vscode.ViewColumn.Beside,
+                    { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
                     {
                         enableScripts: true,
                         retainContextWhenHidden: true,
