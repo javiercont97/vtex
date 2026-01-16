@@ -11,7 +11,7 @@ export class PDFPreview {
         private logger: Logger
     ) {}
 
-    async showPDF(documentUri: vscode.Uri): Promise<void> {
+    async showPDF(documentUri: vscode.Uri, position?: { page: number; x: number; y: number }): Promise<void> {
         const docPath = documentUri.fsPath;
         const docDir = path.dirname(docPath);
         const docName = path.basename(docPath, '.tex');
@@ -56,6 +56,18 @@ export class PDFPreview {
 
                 // Set initial content
                 this.updatePDFContent(panel, pdfPath);
+            }
+            
+            // If position provided, send it to webview after content loads
+            if (position && panel) {
+                setTimeout(() => {
+                    panel.webview.postMessage({
+                        type: 'scrollToPosition',
+                        page: position.page,
+                        x: position.x,
+                        y: position.y
+                    });
+                }, 500); // Small delay to ensure PDF is loaded
             }
 
             this.logger.info('PDF opened successfully');
@@ -297,6 +309,20 @@ export class PDFPreview {
                 document.getElementById('zoomIn').click();
             } else if (e.key === '-' || e.key === '_') {
                 document.getElementById('zoomOut').click();
+            }
+        });
+        
+        // Listen for SyncTeX position messages from extension
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.type === 'scrollToPosition') {
+                // Navigate to the specified page
+                if (message.page && message.page !== currentPage) {
+                    currentPage = message.page;
+                    renderPage(currentPage);
+                }
+                // TODO: Scroll to exact x,y position within page if needed
+                // This would require calculating viewport coordinates from PDF coordinates
             }
         });
         

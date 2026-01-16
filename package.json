@@ -87,6 +87,11 @@
       {
         "command": "vtex.installTexlab",
         "title": "VTeX: Install/Update texlab LSP Server"
+      },
+      {
+        "command": "vtex.synctex.forwardSearch",
+        "title": "VTeX: Forward Search (Go to PDF)",
+        "icon": "$(arrow-right)"
       }
     ],
     "menus": {
@@ -197,7 +202,15 @@
           "description": "Enable LaTeX language server (texlab) for auto-completion and navigation"
         }
       }
-    }
+    },
+    "keybindings": [
+      {
+        "command": "vtex.synctex.forwardSearch",
+        "key": "ctrl+alt+j",
+        "mac": "cmd+alt+j",
+        "when": "editorTextFocus && editorLangId == latex"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

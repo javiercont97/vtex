@@ -5,10 +5,12 @@ import { Config } from './utils/config';
 import { Logger } from './utils/logger';
 import { TexlabClient } from './lsp/texlabClient';
 import { TexlabInstaller } from './lsp/texlabInstaller';
+import { SyncTexHandler } from './synctex/synctexHandler';
 
 let buildSystem: BuildSystem;
 let pdfPreview: PDFPreview;
 let texlabClient: TexlabClient;
+let synctexHandler: SyncTexHandler;
 let outputChannel: vscode.OutputChannel;
 let logger: Logger;
 
@@ -32,6 +34,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Initialize PDF preview
     pdfPreview = new PDFPreview(context, logger);
+
+    // Initialize SyncTeX handler
+    synctexHandler = new SyncTexHandler(context, logger);
+    synctexHandler.setPdfPreview(pdfPreview);
 
     // Initialize texlab installer and prompt if needed (non-blocking)
     const texlabInstaller = new TexlabInstaller(context);
@@ -156,6 +162,20 @@ function registerCommands(context: vscode.ExtensionContext) {
                     }
                 }
             }
+        })
+    );
+
+    // Forward search (editor → PDF) with SyncTeX
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vtex.synctex.forwardSearch', async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || editor.document.languageId !== 'latex') {
+                vscode.window.showWarningMessage('No active LaTeX document');
+                return;
+            }
+            
+            const line = editor.selection.active.line;
+            await synctexHandler.forwardSearch(editor.document, line);
         })
     );
 }

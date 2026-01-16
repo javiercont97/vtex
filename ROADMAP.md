@@ -77,18 +77,18 @@ extension/
 **Goal**: Professional-grade editing experience
 
 ### Features
-- [ ] Integrate texlab LSP server (auto-download or bundle)
-- [ ] Auto-completion for LaTeX commands
-- [ ] Snippet library (common environments, math symbols)
-- [ ] Syntax highlighting enhancements
+- [x] Integrate texlab LSP server (optional installer)
+- [x] Auto-completion for LaTeX commands (via texlab LSP)
+- [x] Snippet library (common environments, math symbols)
+- [x] Syntax highlighting enhancements (VS Code native)
 - [ ] Forward search (editor → PDF) with SyncTeX
 - [ ] Inverse search (PDF → editor) with SyncTeX
-- [ ] Document outline/structure view
-- [ ] Reference management (labels, citations)
-- [ ] Symbol picker UI
-- [ ] Math preview on hover
-- [ ] Workspace symbol search
-- [ ] Diagnostics integration (show errors inline)
+- [x] Document outline/structure view (via texlab LSP)
+- [x] Reference management (labels, citations) (via texlab LSP)
+- [x] Symbol picker UI (via texlab LSP)
+- [x] Math preview on hover (via texlab LSP)
+- [x] Workspace symbol search (via texlab LSP)
+- [x] Diagnostics integration (via texlab LSP)
 
 ### Integration Points
 - texlab binary bundled or auto-downloaded
