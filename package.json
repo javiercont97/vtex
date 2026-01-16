@@ -179,7 +179,7 @@
         "vtex.rootFile": {
           "type": "string",
           "default": "",
-          "description": "Main LaTeX file for multi-file projects (leave empty for auto-detection)"
+          "description": "Main LaTeX file for multi-file projects (e.g., 'main.tex'). Used for building included files and SyncTeX. Leave empty if working with single-file documents."
         },
         "vtex.showOutputChannel": {
           "type": "string",

@@ -30,8 +30,8 @@ export class SyncTexHandler {
     public async forwardSearch(document: vscode.TextDocument, line: number): Promise<void> {
         try {
             const texPath = document.uri.fsPath;
-            const pdfPath = this.getPdfPath(texPath);
-            const synctexPath = this.getSynctexPath(texPath);
+            const pdfPath = this.getMainPdfPath(texPath);
+            const synctexPath = this.getSynctexPath(pdfPath);
 
             if (!fs.existsSync(pdfPath)) {
                 vscode.window.showWarningMessage('PDF file not found. Build the document first.');
@@ -263,6 +263,27 @@ export class SyncTexHandler {
      */
     private getPdfPath(texPath: string): string {
         return texPath.replace(/\.tex$/, '.pdf');
+    }
+
+    /**
+     * Get main PDF path, considering rootFile configuration
+     */
+    private getMainPdfPath(currentTexPath: string): string {
+        const config = new Config();
+        const rootFile = config.getRootFile();
+        
+        if (rootFile) {
+            // Root file is configured - use it
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (workspaceFolders && workspaceFolders.length > 0) {
+                const rootPath = workspaceFolders[0].uri.fsPath;
+                const mainTexPath = path.join(rootPath, rootFile);
+                return this.getPdfPath(mainTexPath);
+            }
+        }
+        
+        // No root file configured - use current file
+        return this.getPdfPath(currentTexPath);
     }
 
     /**
