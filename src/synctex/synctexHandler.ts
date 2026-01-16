@@ -131,9 +131,13 @@ export class SyncTexHandler {
                 const document = await vscode.workspace.openTextDocument(uri);
                 const editor = await vscode.window.showTextDocument(document);
 
-                // Convert 1-based line to 0-based
-                const line = Math.max(0, result.line - 1);
-                const position = new vscode.Position(line, result.column || 0);
+                // Validate and convert line/column (1-based to 0-based, ensure non-negative)
+                const line = Math.max(0, (result.line || 1) - 1);
+                const column = Math.max(0, result.column || 0);
+                
+                this.logger.info(`Jumping to line ${result.line}, column ${result.column} (resolved to ${line}:${column})`);
+                
+                const position = new vscode.Position(line, column);
                 
                 editor.selection = new vscode.Selection(position, position);
                 editor.revealRange(
