@@ -74,7 +74,7 @@ export class PDFPreview {
                         await this.inverseSearchCallback(pdfPath, message.page, message.x, message.y);
                     } else if (message.type === 'triggerForwardSearch') {
                         // Trigger forward search from the active editor
-                        await vscode.commands.executeCommand('vtex.forwardSearch');
+                        await vscode.commands.executeCommand('vtex.synctex.forwardSearch');
                     }
                 },
                 undefined,
