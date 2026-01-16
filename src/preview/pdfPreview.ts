@@ -207,7 +207,7 @@ export class PDFPreview {
     <div id="controls">
         <button id="prevPage" title="Previous Page">← Prev</button>
         <button id="nextPage" title="Next Page">Next →</button>
-        <span id="pageInfo">Page <span id="currentPage">-</span> of <span id="totalPages">-</span></span>
+        <span id="pageInfo">Page <input type="number" id="pageInput" min="1" value="1" style="width: 60px; text-align: center;"> of <span id="totalPages">-</span></span>
         <button id="zoomOut" title="Zoom Out">−</button>
         <span id="zoomInfo"><span id="zoomLevel">100</span>%</span>
         <button id="zoomIn" title="Zoom In">+</button>
@@ -269,8 +269,8 @@ export class PDFPreview {
                 
                 await page.render(renderContext).promise;
                 
-                document.getElementById('currentPage').textContent = pageNum;
                 currentPage = pageNum;
+                updateControls();
             } catch (error) {
                 console.error('Error rendering page:', error);
             } finally {
@@ -282,20 +282,38 @@ export class PDFPreview {
             document.getElementById('prevPage').disabled = currentPage <= 1;
             document.getElementById('nextPage').disabled = currentPage >= pdfDoc.numPages;
             document.getElementById('zoomLevel').textContent = Math.round(scale * 100);
+            document.getElementById('pageInput').value = currentPage;
+            document.getElementById('pageInput').max = pdfDoc.numPages;
         }
         
         // Navigation
         document.getElementById('prevPage').addEventListener('click', () => {
             if (currentPage > 1) {
                 renderPage(currentPage - 1);
-                updateControls();
             }
         });
         
         document.getElementById('nextPage').addEventListener('click', () => {
             if (currentPage < pdfDoc.numPages) {
                 renderPage(currentPage + 1);
-                updateControls();
+            }
+        });
+
+        // Page input handler
+        document.getElementById('pageInput').addEventListener('change', (e) => {
+            let pageNum = parseInt(e.target.value);
+            if (pageNum < 1) pageNum = 1;
+            if (pageNum > pdfDoc.numPages) pageNum = pdfDoc.numPages;
+            renderPage(pageNum);
+        });
+
+        document.getElementById('pageInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                let pageNum = parseInt(e.target.value);
+                if (pageNum < 1) pageNum = 1;
+                if (pageNum > pdfDoc.numPages) pageNum = pdfDoc.numPages;
+                renderPage(pageNum);
+                e.target.blur();
             }
         });
         
@@ -303,26 +321,22 @@ export class PDFPreview {
         document.getElementById('zoomIn').addEventListener('click', () => {
             scale *= 1.2;
             renderPage(currentPage);
-            updateControls();
         });
         
         document.getElementById('zoomOut').addEventListener('click', () => {
             scale /= 1.2;
             renderPage(currentPage);
-            updateControls();
         });
         
         document.getElementById('fitWidth').addEventListener('click', () => {
             const containerWidth = container.clientWidth - 40;
             scale = containerWidth / (canvas.width / scale);
             renderPage(currentPage);
-            updateControls();
         });
 
         document.getElementById('resetZoom').addEventListener('click', () => {
             scale = 1.0;
             renderPage(currentPage);
-            updateControls();
         });
 
         // Forward search button
@@ -354,8 +368,7 @@ export class PDFPreview {
             if (message.type === 'scrollToPosition') {
                 // Navigate to the specified page
                 if (message.page && message.page !== currentPage) {
-                    currentPage = message.page;
-                    renderPage(currentPage);
+                    renderPage(message.page);
                 }
                 // TODO: Scroll to exact x,y position within page if needed
                 // This would require calculating viewport coordinates from PDF coordinates
