@@ -39,41 +39,49 @@ export class BuildSystem {
     }
 
     async initialize(): Promise<void> {
-        const buildMethod = this.config.getBuildMethod();
-        this.logger.info(`Initializing build system with method: ${buildMethod}`);
+        try {
+            const buildMethod = this.config.getBuildMethod();
+            this.logger.info(`Initializing build system with method: ${buildMethod}`);
 
-        if (buildMethod === 'local') {
-            this.builder = new LocalBuilder(this.config, this.logger);
-        } else if (buildMethod === 'docker') {
-            this.builder = new DockerBuilder(this.config, this.logger);
-        } else {
-            // Auto-detect
-            const hasLocal = await this.detector.hasLocalTexLive();
-            if (hasLocal) {
-                this.logger.info('Local TeX Live detected, using local builder');
+            if (buildMethod === 'local') {
                 this.builder = new LocalBuilder(this.config, this.logger);
+            } else if (buildMethod === 'docker') {
+                this.builder = new DockerBuilder(this.config, this.logger);
             } else {
-                const hasDocker = await this.detector.hasDocker();
-                if (hasDocker) {
-                    this.logger.info('Docker detected, using Docker builder');
-                    this.builder = new DockerBuilder(this.config, this.logger);
+                // Auto-detect
+                const hasLocal = await this.detector.hasLocalTexLive();
+                if (hasLocal) {
+                    this.logger.info('Local TeX Live detected, using local builder');
+                    this.builder = new LocalBuilder(this.config, this.logger);
                 } else {
-                    this.logger.error('No LaTeX environment found!');
-                    vscode.window.showErrorMessage(
-                        'No LaTeX environment detected. Please install TeX Live or Docker.'
+                    const hasDocker = await this.detector.hasDocker();
+                    if (hasDocker) {
+                        this.logger.info('Docker detected, using Docker builder');
+                        this.builder = new DockerBuilder(this.config, this.logger);
+                    } else {
+                        this.logger.error('No LaTeX environment found!');
+                        vscode.window.showErrorMessage(
+                            'No LaTeX environment detected. Please install TeX Live or Docker.'
+                        );
+                        return;
+                    }
+                }
+            }
+
+            if (this.builder) {
+                const available = await this.builder.isAvailable();
+                if (!available) {
+                    this.logger.warn(`Selected builder ${this.builder.getName()} is not available`);
+                    vscode.window.showWarningMessage(
+                        `Selected build method (${this.builder.getName()}) is not available`
                     );
                 }
             }
-        }
-
-        if (this.builder) {
-            const available = await this.builder.isAvailable();
-            if (!available) {
-                this.logger.warn(`Selected builder ${this.builder.getName()} is not available`);
-                vscode.window.showWarningMessage(
-                    `Selected build method (${this.builder.getName()}) is not available`
-                );
-            }
+            
+            this.logger.info('Build system initialized successfully');
+        } catch (error) {
+            this.logger.error(`Error during build system initialization: ${error}`);
+            throw error;
         }
     }
 

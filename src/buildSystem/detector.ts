@@ -5,11 +5,13 @@ import { Logger } from '../utils/logger';
 const execAsync = promisify(exec);
 
 export class EnvironmentDetector {
+    private readonly TIMEOUT = 5000; // 5 second timeout
+
     constructor(private logger: Logger) {}
 
     async hasLocalTexLive(): Promise<boolean> {
         try {
-            await execAsync('pdflatex --version');
+            await execAsync('pdflatex --version', { timeout: this.TIMEOUT });
             return true;
         } catch {
             return false;
@@ -18,7 +20,7 @@ export class EnvironmentDetector {
 
     async hasDocker(): Promise<boolean> {
         try {
-            await execAsync('docker --version');
+            await execAsync('docker --version', { timeout: this.TIMEOUT });
             return true;
         } catch {
             return false;
@@ -27,7 +29,7 @@ export class EnvironmentDetector {
 
     async getTexLiveVersion(): Promise<string> {
         try {
-            const { stdout } = await execAsync('pdflatex --version');
+            const { stdout } = await execAsync('pdflatex --version', { timeout: this.TIMEOUT });
             const match = stdout.match(/TeX Live (\d+)/);
             return match ? match[1] : 'Unknown';
         } catch {
@@ -37,7 +39,7 @@ export class EnvironmentDetector {
 
     async getDockerVersion(): Promise<string> {
         try {
-            const { stdout } = await execAsync('docker --version');
+            const { stdout } = await execAsync('docker --version', { timeout: this.TIMEOUT });
             const match = stdout.match(/Docker version ([\d.]+)/);
             return match ? match[1] : 'Unknown';
         } catch {
@@ -47,7 +49,7 @@ export class EnvironmentDetector {
 
     async hasLatexmk(): Promise<boolean> {
         try {
-            await execAsync('latexmk --version');
+            await execAsync('latexmk --version', { timeout: this.TIMEOUT });
             return true;
         } catch {
             return false;

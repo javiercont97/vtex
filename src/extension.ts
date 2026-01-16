@@ -20,7 +20,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Initialize build system
     buildSystem = new BuildSystem(config, logger, context);
-    await buildSystem.initialize();
+    
+    // Initialize build system asynchronously (don't block activation)
+    buildSystem.initialize().catch(error => {
+        logger.error(`Failed to initialize build system: ${error}`);
+        vscode.window.showErrorMessage(`VTeX: Failed to initialize build system. ${error}`);
+    });
 
     // Initialize PDF preview
     pdfPreview = new PDFPreview(context, logger);
