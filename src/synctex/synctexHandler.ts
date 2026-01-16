@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as child_process from 'child_process';
 import { Logger } from '../utils/logger';
+import { Config } from '../utils/config';
 
 /**
  * Handles SyncTeX forward and inverse search between editor and PDF
@@ -115,20 +116,36 @@ export class SyncTexHandler {
 
     /**
      * Query SyncTeX using synctex command-line tool
+     * Automatically uses Docker if build method is docker or if synctex is not available locally
      */
     private async querySyncTeX(
         mode: 'view' | 'edit',
         params: { line?: number; input?: string; page?: number; x?: number; y?: number; output: string }
     ): Promise<any> {
+        // Check if we should use Docker
+        const config = new Config();
+        const buildMethod = config.getBuildMethod();
+        const useDocker = buildMethod === 'docker';
+        
         return new Promise((resolve, reject) => {
             let command: string;
+            let baseCommand: string;
 
             if (mode === 'view') {
                 // Forward search: source → PDF
-                command = `synctex view -i "${params.line}:0:${params.input}" -o "${params.output}"`;
+                baseCommand = `synctex view -i "${params.line}:0:${params.input}" -o "${params.output}"`;
             } else {
                 // Inverse search: PDF → source
-                command = `synctex edit -o "${params.output}:${params.page}:${params.x}:${params.y}"`;
+                baseCommand = `synctex edit -o "${params.output}:${params.page}:${params.x}:${params.y}"`;
+            }
+
+            if (useDocker) {
+                // Run in Docker container
+                const docDir = path.dirname(params.output);
+                const dockerImage = config.getDockerImage();
+                command = `docker run --rm -v "${docDir}:${docDir}" -w "${docDir}" ${dockerImage} ${baseCommand}`;
+            } else {
+                command = baseCommand;
             }
 
             child_process.exec(command, { timeout: 5000 }, (error, stdout, stderr) => {
