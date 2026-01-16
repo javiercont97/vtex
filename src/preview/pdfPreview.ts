@@ -5,6 +5,7 @@ import { Logger } from '../utils/logger';
 
 export class PDFPreview {
     private panels: Map<string, vscode.WebviewPanel> = new Map();
+    private panelDocuments: Map<string, vscode.Uri> = new Map();
     private inverseSearchCallback?: (pdfPath: string, page: number, x: number, y: number) => Promise<void>;
 
     constructor(
@@ -38,6 +39,9 @@ export class PDFPreview {
             const panelKey = pdfPath;
             let panel = this.panels.get(panelKey);
 
+            // Store the document URI for this panel (for forward search)
+            this.panelDocuments.set(panelKey, documentUri);
+
             if (panel) {
                 // Panel exists, reveal it and update content (without stealing focus)
                 panel.reveal(vscode.ViewColumn.Beside, true);
@@ -60,6 +64,7 @@ export class PDFPreview {
                 // Clean up when panel is disposed
                 panel.onDidDispose(() => {
                     this.panels.delete(panelKey);
+                    this.panelDocuments.delete(panelKey);
                 });
 
                 // Set initial content
@@ -73,8 +78,15 @@ export class PDFPreview {
                     if (message.type === 'inverseSearch' && this.inverseSearchCallback) {
                         await this.inverseSearchCallback(pdfPath, message.page, message.x, message.y);
                     } else if (message.type === 'triggerForwardSearch') {
-                        // Trigger forward search from the active editor
-                        await vscode.commands.executeCommand('vtex.synctex.forwardSearch');
+                        // Get the document associated with this PDF panel
+                        const docUri = this.panelDocuments.get(panelKey);
+                        if (docUri) {
+                            // Open the document and trigger forward search
+                            const document = await vscode.workspace.openTextDocument(docUri);
+                            const editor = await vscode.window.showTextDocument(document, vscode.ViewColumn.One, true);
+                            const line = editor.selection.active.line;
+                            await vscode.commands.executeCommand('vtex.synctex.forwardSearch');
+                        }
                     }
                 },
                 undefined,
