@@ -81,14 +81,17 @@ extension/
 - [x] Auto-completion for LaTeX commands (via texlab LSP)
 - [x] Snippet library (common environments, math symbols)
 - [x] Syntax highlighting enhancements (VS Code native)
-- [ ] Forward search (editor → PDF) with SyncTeX
-- [ ] Inverse search (PDF → editor) with SyncTeX
+- [x] Forward search (editor → PDF) with SyncTeX
+- [ ] Inverse search (PDF → editor) with SyncTeX (coming soon)
 - [x] Document outline/structure view (via texlab LSP)
 - [x] Reference management (labels, citations) (via texlab LSP)
 - [x] Symbol picker UI (via texlab LSP)
 - [x] Math preview on hover (via texlab LSP)
 - [x] Workspace symbol search (via texlab LSP)
 - [x] Diagnostics integration (via texlab LSP)
+
+### Phase 2 Status: ~95% Complete 🎉
+Most features complete! Only inverse search remains (PDF click → editor line).
 
 ### Integration Points
 - texlab binary bundled or auto-downloaded
