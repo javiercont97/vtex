@@ -39,6 +39,11 @@ export async function activate(context: vscode.ExtensionContext) {
     synctexHandler = new SyncTexHandler(context, logger);
     synctexHandler.setPdfPreview(pdfPreview);
 
+    // Set up inverse search callback (PDF → editor)
+    pdfPreview.setInverseSearchCallback(async (pdfPath, page, x, y) => {
+        await synctexHandler.inverseSearch(pdfPath, page, x, y);
+    });
+
     // Initialize texlab installer and prompt if needed (non-blocking)
     const texlabInstaller = new TexlabInstaller(context);
     texlabInstaller.promptInstallIfNeeded().catch(error => {

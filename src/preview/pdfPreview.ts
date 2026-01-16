@@ -5,11 +5,19 @@ import { Logger } from '../utils/logger';
 
 export class PDFPreview {
     private panels: Map<string, vscode.WebviewPanel> = new Map();
+    private inverseSearchCallback?: (pdfPath: string, page: number, x: number, y: number) => Promise<void>;
 
     constructor(
         private context: vscode.ExtensionContext,
         private logger: Logger
     ) {}
+
+    /**
+     * Set callback for inverse search (PDF → editor)
+     */
+    public setInverseSearchCallback(callback: (pdfPath: string, page: number, x: number, y: number) => Promise<void>): void {
+        this.inverseSearchCallback = callback;
+    }
 
     async showPDF(documentUri: vscode.Uri, position?: { page: number; x: number; y: number }): Promise<void> {
         const docPath = documentUri.fsPath;
@@ -48,6 +56,17 @@ export class PDFPreview {
                 );
 
                 this.panels.set(panelKey, panel);
+
+                // Handle messages from webview (for inverse search)
+                panel.webview.onDidReceiveMessage(
+                    async (message) => {
+                        if (message.type === 'inverseSearch' && this.inverseSearchCallback) {
+                            await this.inverseSearchCallback(pdfPath, message.page, message.x, message.y);
+                        }
+                    },
+                    undefined,
+                    this.context.subscriptions
+                );
 
                 // Clean up when panel is disposed
                 panel.onDidDispose(() => {
@@ -191,7 +210,9 @@ export class PDFPreview {
         <button id="zoomOut" title="Zoom Out">−</button>
         <span id="zoomInfo"><span id="zoomLevel">100</span>%</span>
         <button id="zoomIn" title="Zoom In">+</button>
+        <button id="resetZoom" title="Reset Zoom to 100%">Reset Zoom</button>
         <button id="fitWidth" title="Fit Width">Fit Width</button>
+        <button id="forwardSearch" title="Forward Search (Ctrl+Alt+J)">Editor → PDF</button>
         <button id="refresh" title="Refresh PDF">⟳ Refresh</button>
     </div>
     
@@ -293,6 +314,18 @@ export class PDFPreview {
             renderPage(currentPage);
             updateControls();
         });
+
+        document.getElementById('resetZoom').addEventListener('click', () => {
+            scale = 1.0;
+            renderPage(currentPage);
+            updateControls();
+        });
+
+        // Forward search button
+        document.getElementById('forwardSearch').addEventListener('click', () => {
+            const vscode = acquireVsCodeApi();
+            vscode.postMessage({ type: 'triggerForwardSearch' });
+        });
         
         // Refresh
         document.getElementById('refresh').addEventListener('click', () => {
@@ -325,7 +358,36 @@ export class PDFPreview {
                 // This would require calculating viewport coordinates from PDF coordinates
             }
         });
-        
+
+        // Inverse search: Ctrl+Click on PDF → jump to source
+        canvas.addEventListener('click', async (event) => {
+            if (event.ctrlKey || event.metaKey) {
+                event.preventDefault();
+                
+                // Get click coordinates relative to canvas
+                const rect = canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                // Convert canvas coordinates to PDF coordinates
+                const page = await pdfDoc.getPage(currentPage);
+                const viewport = page.getViewport({ scale: scale });
+                
+                // PDF.js uses bottom-left origin, so we need to flip Y
+                const pdfX = x / scale;
+                const pdfY = viewport.height / scale - (y / scale);
+                
+                // Send inverse search request to extension
+                const vscode = acquireVsCodeApi();
+                vscode.postMessage({
+                    type: 'inverseSearch',
+                    page: currentPage,
+                    x: pdfX,
+                    y: pdfY
+                });
+            }
+        });
+
         // Initial load
         loadPDF();
     </script>
