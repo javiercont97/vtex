@@ -57,17 +57,6 @@ export class PDFPreview {
 
                 this.panels.set(panelKey, panel);
 
-                // Handle messages from webview (for inverse search)
-                panel.webview.onDidReceiveMessage(
-                    async (message) => {
-                        if (message.type === 'inverseSearch' && this.inverseSearchCallback) {
-                            await this.inverseSearchCallback(pdfPath, message.page, message.x, message.y);
-                        }
-                    },
-                    undefined,
-                    this.context.subscriptions
-                );
-
                 // Clean up when panel is disposed
                 panel.onDidDispose(() => {
                     this.panels.delete(panelKey);
@@ -76,6 +65,18 @@ export class PDFPreview {
                 // Set initial content
                 this.updatePDFContent(panel, pdfPath);
             }
+
+            // Handle messages from webview (for inverse search)
+            // Register this every time to ensure it works with reused panels
+            panel.webview.onDidReceiveMessage(
+                async (message) => {
+                    if (message.type === 'inverseSearch' && this.inverseSearchCallback) {
+                        await this.inverseSearchCallback(pdfPath, message.page, message.x, message.y);
+                    }
+                },
+                undefined,
+                this.context.subscriptions
+            );
             
             // If position provided, send it to webview after content loads
             if (position && panel) {

@@ -127,9 +127,19 @@ export class SyncTexHandler {
                     this.logger.info(`Using direct file URI: ${uri.toString()}`);
                 }
                 
-                // Open the file and jump to line
+                // Open or find the document
                 const document = await vscode.workspace.openTextDocument(uri);
-                const editor = await vscode.window.showTextDocument(document);
+                
+                // Check if document is already visible in an editor
+                let editor = vscode.window.visibleTextEditors.find(e => e.document.uri.toString() === uri.toString());
+                
+                if (editor) {
+                    // Document already open - just reveal it without stealing focus from PDF
+                    await vscode.window.showTextDocument(document, editor.viewColumn, true);
+                } else {
+                    // Document not open - open it in a new column without stealing focus
+                    editor = await vscode.window.showTextDocument(document, vscode.ViewColumn.One, true);
+                }
 
                 // Validate and convert line/column (1-based to 0-based, ensure non-negative)
                 const line = Math.max(0, (result.line || 1) - 1);
