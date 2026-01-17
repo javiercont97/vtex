@@ -189,17 +189,17 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
         body {
             margin: 0;
             padding: 0;
-            background-color: #2b3e50;
+            background-color: var(--vscode-editor-background);
             overflow: hidden;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: var(--vscode-font-family);
         }
         
         #toolbar {
-            background-color: #34495e;
-            color: #ecf0f1;
+            background-color: var(--vscode-sideBar-background);
+            color: var(--vscode-foreground);
             padding: 10px 20px;
             display: flex;
             align-items: center;
@@ -207,12 +207,13 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             z-index: 10;
             min-height: 52px;
+            border-bottom: 1px solid var(--vscode-panel-border);
         }
         
         .toolbar-button {
             background-color: transparent;
-            color: #ecf0f1;
-            border: 1px solid #4a5f7f;
+            color: var(--vscode-foreground);
+            border: 1px solid var(--vscode-widget-border);
             padding: 8px 12px;
             cursor: pointer;
             border-radius: 4px;
@@ -226,12 +227,12 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
         }
         
         .toolbar-button:hover:not(:disabled) {
-            background-color: #4a5f7f;
-            border-color: #5a7ea0;
+            background-color: var(--vscode-toolbar-hoverBackground);
+            border-color: var(--vscode-focusBorder);
         }
         
         .toolbar-button:active:not(:disabled) {
-            background-color: #3a4f6f;
+            background-color: var(--vscode-button-secondaryBackground);
         }
         
         .toolbar-button:disabled {
@@ -248,7 +249,7 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
         .toolbar-separator {
             width: 1px;
             height: 24px;
-            background-color: #4a5f7f;
+            background-color: var(--vscode-widget-border);
             margin: 0 6px;
         }
         
@@ -257,31 +258,39 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
             align-items: center;
             gap: 8px;
             padding: 0 10px;
-            color: #ecf0f1;
+            color: var(--vscode-foreground);
             font-size: 14px;
         }
         
         #pageNum {
-            background-color: #2c3e50;
-            border: 1px solid #4a5f7f;
-            color: #ecf0f1;
+            background-color: var(--vscode-input-background);
+            border: 1px solid var(--vscode-input-border);
+            color: var(--vscode-input-foreground);
             padding: 6px 12px;
             border-radius: 4px;
             width: 60px;
             text-align: center;
             font-size: 14px;
             outline: none;
+            -moz-appearance: textfield;
+        }
+        
+        /* Hide number input spinners */
+        #pageNum::-webkit-outer-spin-button,
+        #pageNum::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
         
         #pageNum:focus {
-            border-color: #3498db;
-            background-color: #34495e;
+            border-color: var(--vscode-focusBorder);
+            background-color: var(--vscode-input-background);
         }
         
         #zoomLevel {
-            background-color: #2c3e50;
-            border: 1px solid #4a5f7f;
-            color: #ecf0f1;
+            background-color: var(--vscode-badge-background);
+            border: 1px solid var(--vscode-widget-border);
+            color: var(--vscode-badge-foreground);
             padding: 6px 12px;
             border-radius: 4px;
             min-width: 65px;
@@ -301,7 +310,7 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
             justify-content: center;
             align-items: flex-start;
             padding: 20px;
-            background-color: #2b3e50;
+            background-color: var(--vscode-editor-background);
         }
         
         #pdfCanvas {
@@ -311,14 +320,14 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
         }
         
         .loading {
-            color: #ecf0f1;
+            color: var(--vscode-foreground);
             text-align: center;
             padding: 50px;
             font-size: 18px;
         }
         
         .error {
-            color: #e74c3c;
+            color: var(--vscode-errorForeground);
             text-align: center;
             padding: 50px;
             font-size: 16px;
@@ -343,25 +352,23 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
         <div class="toolbar-separator"></div>
         
         <button class="toolbar-button" id="zoomOut" title="Zoom Out (-)">
-            <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zM7 9h5v1H7z"/></svg>
         </button>
         
         <div id="zoomLevel">100%</div>
         
         <button class="toolbar-button" id="zoomIn" title="Zoom In (+)">
-            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zm.5-7h-1v2H7v1h2v2h1v-2h2V9h-2z"/></svg>
         </button>
         
         <div class="toolbar-separator"></div>
         
         <button class="toolbar-button" id="fitWidth" title="Fit Width">
-            <svg viewBox="0 0 24 24"><path d="M3 5v14h18V5H3zm16 12H5V7h14v10z"/></svg>
-            Fit Width
+            <svg viewBox="0 0 16 16"><path d="M8 15a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 1 0v13a.5.5 0 0 1-.5.5M.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8"/></svg>
         </button>
         
         <button class="toolbar-button" id="fitPage" title="Fit Page">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
-            Fit Page
+            <svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707m4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707"/></svg>
         </button>
         
         <div class="spacer"></div>

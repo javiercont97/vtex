@@ -117,7 +117,7 @@ All features implemented! Bidirectional SyncTeX working with smart focus managem
   - [x] BibTeX entry parser and validator
   - [x] Citation picker with search
   - [x] Citation auto-completion
-  - [ ] BibTeX entry editor GUI
+  - [x] BibTeX entry editor GUI
   - [ ] Integration with Zotero/Mendeley
 - [x] Project management
   - Multi-file project support with auto-detection
@@ -126,16 +126,20 @@ All features implemented! Bidirectional SyncTeX working with smart focus managem
   - Project structure analyzer
 - [x] Advanced preview (Already in Phase 2)
   - Split-pane mode (editor + PDF)
-  - Zoom controls (in/out/fit/reset)
+  - Zoom controls (magnifying glass icons)
+  - Fit Width and Fit Page modes
   - Keyboard navigation
   - Sync scrolling (via SyncTeX)
-  - PDF annotations support (via PDF.js)
+  - Modern UI with VS Code theme integration
+  - PDF.js integration with custom toolbar
+  - PDF file association (open PDFs from file explorer)
+  - Native PDF viewer option (alternative to PDF.js)
 - [ ] Export options
   - Export to different formats (via pandoc)
   - Arxiv-ready bundles
 
-### Phase 3 Status: 80% Complete 🎯
-Core features implemented! Templates, package management, multi-file projects, and bibliography basics all working.
+### Phase 3 Status: 90% Complete 🎯
+Core features implemented! Templates, package management, multi-file projects, and bibliography management (including GUI editor) all working. Only missing Zotero/Mendeley integration and export options.
 
 ---
 
@@ -222,6 +226,17 @@ Core features implemented! Templates, package management, multi-file projects, a
 - Added bibliography management with citation picker and completion
 - PDF preview already has zoom controls and advanced features
 - Export options remain for future implementation
+
+### 2026-01-17: Phase 3 90% Complete
+- Implemented BibTeX GUI editor with form-based interface (bibTeXEditor.ts)
+- Added PDF file association (open PDFs from VS Code file explorer)
+- Created native PDF viewer option as alternative to PDF.js
+- Redesigned PDF viewer UI with modern toolbar and SVG icons
+- Integrated VS Code theme variables for seamless theme adaptation
+- Enhanced zoom controls with magnifying glass icons
+- Improved fit modes with intuitive icons (horizontal arrows, expand corners)
+- Removed input spinners for cleaner page navigation
+- Bibliography management now 80% complete (only missing Zotero/Mendeley)
 
 ---
 
