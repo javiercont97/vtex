@@ -109,6 +109,11 @@
         "icon": "$(references)"
       },
       {
+        "command": "vtex.editBibtexEntry",
+        "title": "VTeX: Edit BibTeX Entry",
+        "icon": "$(edit)"
+      },
+      {
         "command": "vtex.findRootFile",
         "title": "VTeX: Find Root File"
       },
@@ -173,6 +178,19 @@
           "default": true,
           "description": "Automatically build LaTeX documents on save"
         },
+        "vtex.pdfViewer": {
+          "type": "string",
+          "enum": [
+            "pdfjs",
+            "native"
+          ],
+          "default": "pdfjs",
+          "enumDescriptions": [
+            "Use PDF.js for full control (SyncTeX, custom UI)",
+            "Use browser's native PDF viewer (simpler, less control)"
+          ],
+          "description": "PDF viewer implementation to use"
+        },
         "vtex.buildEngine": {
           "type": "string",
           "enum": [
@@ -226,6 +244,18 @@
         }
       }
     },
+    "customEditors": [
+      {
+        "viewType": "vtex.pdfPreview",
+        "displayName": "VTeX PDF Preview",
+        "selector": [
+          {
+            "filenamePattern": "*.pdf"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
     "keybindings": [
       {
         "command": "vtex.synctex.forwardSearch",

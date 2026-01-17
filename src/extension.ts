@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { BuildSystem } from './buildSystem/builder';
 import { PDFPreview } from './preview/pdfPreview';
+import { NativePDFPreview } from './preview/nativePdfPreview';
 import { Config } from './utils/config';
 import { Logger } from './utils/logger';
 import { TexlabClient } from './lsp/texlabClient';
@@ -10,15 +11,18 @@ import { TemplateManager } from './templates/templateManager';
 import { PackageManager } from './buildSystem/packageManager';
 import { ProjectManager } from './project/projectManager';
 import { BibliographyManager } from './bibliography/bibliographyManager';
+import { BibTeXEditor } from './bibliography/bibTeXEditor';
 
 let buildSystem: BuildSystem;
 let pdfPreview: PDFPreview;
+let nativePdfPreview: NativePDFPreview;
 let texlabClient: TexlabClient;
 let synctexHandler: SyncTexHandler;
 let templateManager: TemplateManager;
 let packageManager: PackageManager;
 let projectManager: ProjectManager;
 let bibliographyManager: BibliographyManager;
+let bibTeXEditor: BibTeXEditor;
 let outputChannel: vscode.OutputChannel;
 let logger: Logger;
 
@@ -40,8 +44,9 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage(`VTeX: Failed to initialize build system. ${error}`);
     });
 
-    // Initialize PDF preview
+    // Initialize PDF previews (both viewers)
     pdfPreview = new PDFPreview(context, logger);
+    nativePdfPreview = new NativePDFPreview(context, logger);
 
     // Initialize SyncTeX handler
     synctexHandler = new SyncTexHandler(context, logger);
@@ -57,6 +62,7 @@ export async function activate(context: vscode.ExtensionContext) {
     packageManager = new PackageManager(logger);
     projectManager = new ProjectManager(config, logger);
     bibliographyManager = new BibliographyManager(logger);
+    bibTeXEditor = new BibTeXEditor(context, logger, bibliographyManager);
 
     // Initialize texlab installer and prompt if needed (non-blocking)
     const texlabInstaller = new TexlabInstaller(context);
@@ -69,6 +75,16 @@ export async function activate(context: vscode.ExtensionContext) {
     texlabClient.start().catch(error => {
         logger.error(`Failed to start LSP client: ${error}`);
     });
+
+    // Register custom editor for PDF files
+    context.subscriptions.push(
+        vscode.window.registerCustomEditorProvider('vtex.pdfPreview', pdfPreview, {
+            webviewOptions: {
+                retainContextWhenHidden: true
+            },
+            supportsMultipleEditorsPerDocument: false
+        })
+    );
 
     // Register commands
     registerCommands(context);
@@ -134,7 +150,7 @@ function registerCommands(context: vscode.ExtensionContext) {
                 return;
             }
             
-            await pdfPreview.showPDF(editor.document.uri);
+            await showPDFWithConfiguredViewer(editor.document.uri);
         })
     );
 
@@ -270,6 +286,74 @@ function registerCommands(context: vscode.ExtensionContext) {
         })
     );
 
+    // BibTeX Editor
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vtex.editBibtexEntry', async () => {
+            // Get active .bib file or let user choose
+            const editor = vscode.window.activeTextEditor;
+            let bibFile: string | undefined;
+            
+            if (editor && editor.document.fileName.endsWith('.bib')) {
+                bibFile = editor.document.fileName;
+            } else {
+                // Find .bib files in workspace
+                const bibFiles = await vscode.workspace.findFiles('**/*.bib');
+                if (bibFiles.length === 0) {
+                    vscode.window.showWarningMessage('No BibTeX files found in workspace');
+                    return;
+                }
+                
+                if (bibFiles.length === 1) {
+                    bibFile = bibFiles[0].fsPath;
+                } else {
+                    const selected = await vscode.window.showQuickPick(
+                        bibFiles.map(f => ({
+                            label: vscode.workspace.asRelativePath(f),
+                            file: f.fsPath
+                        })),
+                        { placeHolder: 'Select BibTeX file to edit' }
+                    );
+                    
+                    if (!selected) {
+                        return;
+                    }
+                    bibFile = selected.file;
+                }
+            }
+
+            if (!bibFile) {
+                return;
+            }
+
+            // Get entry to edit (if any)
+            const entries = await bibliographyManager.parseBibFile(bibFile);
+            if (entries.length > 0) {
+                const items = [
+                    { label: '$(add) Create New Entry', key: undefined },
+                    ...entries.map(e => ({
+                        label: `$(book) ${e.key}`,
+                        description: e.type,
+                        detail: e.fields['title'] || '',
+                        key: e.key
+                    }))
+                ];
+
+                const selected = await vscode.window.showQuickPick(items, {
+                    placeHolder: 'Select entry to edit or create new'
+                });
+
+                if (!selected) {
+                    return;
+                }
+
+                await bibTeXEditor.openEditor(bibFile, selected.key);
+            } else {
+                // Empty file, create new entry
+                await bibTeXEditor.openEditor(bibFile);
+            }
+        })
+    );
+
     // Phase 3: Find Root File
     context.subscriptions.push(
         vscode.commands.registerCommand('vtex.findRootFile', async () => {
@@ -353,6 +437,30 @@ function setupAutoBuild(context: vscode.ExtensionContext, config: Config) {
     );
 }
 
+/**
+ * Helper to show PDF with the configured viewer
+ */
+async function showPDFWithConfiguredViewer(documentUri: vscode.Uri, position?: { page: number; x: number; y: number }): Promise<void> {
+    const config = vscode.workspace.getConfiguration('vtex');
+    const viewerType = config.get<string>('pdfViewer', 'pdfjs');
+
+    if (viewerType === 'native') {
+        // Use native viewer - extract PDF path from document URI
+        const docPath = documentUri.fsPath;
+        const docDir = require('path').dirname(docPath);
+        const docName = require('path').basename(docPath, '.tex');
+        const pdfPath = require('path').join(docDir, `${docName}.pdf`);
+        await nativePdfPreview.showPDF(pdfPath);
+        
+        if (position) {
+            logger.info('Native PDF viewer does not support SyncTeX positioning');
+        }
+    } else {
+        // Use PDF.js viewer (default)
+        await pdfPreview.showPDF(documentUri, position);
+    }
+}
+
 function createStatusBar(context: vscode.ExtensionContext) {
     const statusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Left,
@@ -402,7 +510,7 @@ async function buildDocument(document: vscode.TextDocument): Promise<void> {
             }
             
             // Auto-refresh PDF preview (without stealing focus)
-            await pdfPreview.showPDF(rootFile);
+            await showPDFWithConfiguredViewer(rootFile);
         } else {
             // Build failed, but check if PDF was generated
             if (result.pdfPath) {
@@ -413,7 +521,7 @@ async function buildDocument(document: vscode.TextDocument): Promise<void> {
                 logger.error(`${errors.length} error(s) found`);
                 
                 // Still refresh PDF preview to show the partial result
-                await pdfPreview.showPDF(rootFile);
+                await showPDFWithConfiguredViewer(rootFile);
                 
                 // Show warning instead of error
                 vscode.window.showWarningMessage(

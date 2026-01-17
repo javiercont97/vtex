@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Logger } from '../utils/logger';
 
-export class PDFPreview {
+export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
     private panels: Map<string, vscode.WebviewPanel> = new Map();
     private panelDocuments: Map<string, vscode.Uri> = new Map();
     private inverseSearchCallback?: (pdfPath: string, page: number, x: number, y: number) => Promise<void>;
@@ -12,6 +12,51 @@ export class PDFPreview {
         private context: vscode.ExtensionContext,
         private logger: Logger
     ) {}
+
+    /**
+     * CustomReadonlyEditorProvider implementation
+     */
+    openCustomDocument(uri: vscode.Uri): vscode.CustomDocument {
+        return { uri, dispose: () => {} };
+    }
+
+    async resolveCustomEditor(
+        document: vscode.CustomDocument,
+        webviewPanel: vscode.WebviewPanel
+    ): Promise<void> {
+        this.logger.info(`Opening PDF as custom editor: ${document.uri.fsPath}`);
+        
+        const pdfPath = document.uri.fsPath;
+        const panelKey = pdfPath;
+        
+        // Store panel
+        this.panels.set(panelKey, webviewPanel);
+        
+        // Configure webview
+        webviewPanel.webview.options = {
+            enableScripts: true
+        };
+
+        // Load PDF content
+        await this.updatePDFContent(webviewPanel, pdfPath);
+
+        // Handle cleanup
+        webviewPanel.onDidDispose(() => {
+            this.panels.delete(panelKey);
+            this.panelDocuments.delete(panelKey);
+        });
+
+        // Handle messages from webview
+        webviewPanel.webview.onDidReceiveMessage(async message => {
+            if (message.type === 'click' && this.inverseSearchCallback) {
+                try {
+                    await this.inverseSearchCallback(pdfPath, message.page, message.x, message.y);
+                } catch (error: any) {
+                    this.logger.error(`Inverse search failed: ${error.message}`);
+                }
+            }
+        });
+    }
 
     /**
      * Set callback for inverse search (PDF → editor)
