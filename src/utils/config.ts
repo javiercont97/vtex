@@ -51,4 +51,17 @@ export class Config {
     getShowOutputChannel(): 'never' | 'onError' | 'always' {
         return this.config.get<'never' | 'onError' | 'always'>('showOutputChannel', 'onError');
     }
+
+    // Generic get method
+    get<T>(key: string): T | undefined;
+    get<T>(key: string, defaultValue: T): T;
+    get<T>(key: string, defaultValue?: T): T | undefined {
+        return this.config.get<T>(key, defaultValue as any);
+    }
+
+    // Generic update method
+    async update(key: string, value: any, target?: vscode.ConfigurationTarget): Promise<void> {
+        await this.config.update(key, value, target);
+        this.refresh(); // Refresh config after update
+    }
 }

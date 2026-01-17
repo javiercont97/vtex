@@ -71,6 +71,11 @@
         "icon": "$(trash)"
       },
       {
+        "command": "vtex.cleanBuild",
+        "title": "VTeX: Clean and Build",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "vtex.viewPdf",
         "title": "VTeX: View PDF",
         "icon": "$(file-pdf)"
@@ -92,6 +97,24 @@
         "command": "vtex.synctex.forwardSearch",
         "title": "VTeX: Forward Search (Go to PDF)",
         "icon": "$(arrow-right)"
+      },
+      {
+        "command": "vtex.newFromTemplate",
+        "title": "VTeX: New Project from Template",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "vtex.insertCitation",
+        "title": "VTeX: Insert Citation",
+        "icon": "$(references)"
+      },
+      {
+        "command": "vtex.findRootFile",
+        "title": "VTeX: Find Root File"
+      },
+      {
+        "command": "vtex.analyzeProject",
+        "title": "VTeX: Analyze Project Structure"
       }
     ],
     "menus": {

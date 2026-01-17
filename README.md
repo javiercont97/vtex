@@ -1,24 +1,64 @@
 # VTeX - Modern LaTeX Extension for VS Code
 
-A modern, Overleaf-like LaTeX editing experience for VS Code with hybrid build system support.
+A modern, Overleaf-like LaTeX editing experience for VS Code with hybrid build system, intelligent project management, and comprehensive bibliography tools.
+
+## ✨ What's New in Phase 3
+
+- 🎨 **Project Templates**: Start new projects with professional templates (Article, Beamer, Book, Thesis, CV, Letter)
+- 📦 **Smart Package Manager**: Automatic detection and one-click installation of missing LaTeX packages
+- 📁 **Multi-File Projects**: Intelligent root file detection and project structure analysis
+- 📚 **Bibliography Management**: Citation picker, auto-completion, and BibTeX parsing
+- 🔍 **Enhanced PDF Preview**: Zoom controls, keyboard shortcuts, and bidirectional SyncTeX
 
 ## Features
 
-### Phase 1 (Current - MVP)
-- ✅ **Hybrid Build System**: Automatically detects local TeX Live or uses Docker
-- ✅ **Flexible Build Methods**: Choose between local, Docker, or auto-detection
-- ✅ **Multiple Engines**: Support for latexmk, pdflatex, xelatex, and lualatex
-- ✅ **Auto-build on Save**: Automatically compile your documents when you save
-- ✅ **Error Parsing**: Extract and display LaTeX errors and warnings
-- ✅ **PDF Preview**: View your compiled PDFs directly in VS Code
-- ✅ **Docker Cache**: Persistent package cache for faster Docker builds
-- ✅ **Clean Command**: Remove auxiliary files with one click
+### ✅ Phase 1 - MVP (Complete)
+- **Hybrid Build System**: Automatically detects local TeX Live or uses Docker
+- **Flexible Build Methods**: Choose between local, Docker, or auto-detection
+- **Multiple Engines**: Support for latexmk, pdflatex, xelatex, and lualatex
+- **Auto-build on Save**: Automatically compile your documents when you save
+- **Error Parsing**: Extract and display LaTeX errors and warnings
+- **PDF Preview**: View your compiled PDFs directly in VS Code with PDF.js
+- **Docker Cache**: Persistent package cache for faster Docker builds
+- **Clean Command**: Remove auxiliary files with one click
+
+### ✅ Phase 2 - LSP Integration (Complete)
+- **texlab LSP Server**: Auto-completion, go-to-definition, and document symbols
+- **Auto-installer**: One-click texlab installation and updates
+- **Forward Search**: Jump from editor to PDF location (Ctrl+Alt+J)
+- **Inverse Search**: Jump from PDF back to source (Ctrl+Click)
+- **Hover Documentation**: Math preview and command documentation
+- **Workspace Symbols**: Quick navigation to sections and labels
+
+### ✅ Phase 3 - Quality of Life (80% Complete)
+- **Project Templates**: 6 professional templates ready to use
+  - Article, Beamer Presentation, Book, Thesis, CV, Letter
+  - Multi-file structure with automatic setup
+- **Package Manager**: Smart missing package detection
+  - Detects missing packages from build errors
+  - Suggests packages for undefined commands
+  - One-click installation via tlmgr
+- **Project Management**: Seamless multi-file support
+  - Automatic root file detection
+  - Recursive file inclusion analysis
+  - Project structure analyzer
+- **Bibliography Tools**: Complete citation workflow
+  - BibTeX file parsing and validation
+  - Citation picker with search
+  - Auto-completion after `\cite{`
+  - Multi-file .bib support
+- **Enhanced Preview**: Professional PDF viewing
+  - Zoom in/out/fit/reset controls
+  - Page navigation and jumping
+  - Keyboard shortcuts
+  - Bidirectional SyncTeX
 
 ## Requirements
 
 ### Local Build
 - TeX Live (or MikTeX/MacTeX) installed on your system
 - Recommended: `latexmk` for best build experience
+- Optional: `tlmgr` for automatic package installation
 
 ### Docker Build
 - Docker installed and running
@@ -29,65 +69,110 @@ A modern, Overleaf-like LaTeX editing experience for VS Code with hybrid build s
 ### From Source (Development)
 1. Clone this repository
 2. Run `npm install` to install dependencies
-3. Press F5 in VS Code to launch the extension in a new window
+3. Run `npm run compile` to build
+4. Press F5 in VS Code to launch the extension in a new window
 
 ### From VSIX (Coming Soon)
 - Install from VS Code Marketplace (not yet published)
 
-## Usage
+## Quick Start
 
-### Quick Start
+### Creating a New Project
+1. Open Command Palette (`Ctrl+Shift+P`)
+2. Run `VTeX: New Project from Template`
+3. Select a template (e.g., "Thesis")
+4. Choose destination folder
+5. Start editing!
+
+### Working with Existing Projects
 1. Open a `.tex` file
-2. The extension will automatically detect your LaTeX environment
-3. Press `Ctrl+S` (or `Cmd+S` on Mac) to save and build
-4. Use the status bar button or Command Palette (`VTeX: Build LaTeX Document`) to build manually
-5. Click the PDF icon in the editor toolbar to view the compiled PDF
+2. The extension will automatically detect your LaTeX environment and root file
+3. Press `Ctrl+S` to save and auto-build
+4. PDF preview opens automatically (or use the toolbar button)
+5. Use `Ctrl+Alt+J` for forward search, `Ctrl+Click` in PDF for inverse search
 
-### Commands
+### Adding Citations
+1. Type `\cite{` and select from auto-complete, OR
+2. Use `VTeX: Insert Citation` command for interactive picker
+3. Search by author, year, or title
+4. Citation inserted automatically
 
-- **VTeX: Build LaTeX Document** - Compile the current LaTeX document
+## Commands
+
+### Building & Compilation
+- **VTeX: Build LaTeX Document** (`Ctrl+Shift+B`) - Compile the current LaTeX document
 - **VTeX: View PDF** - Open the compiled PDF
 - **VTeX: Clean Auxiliary Files** - Remove intermediate build files
 - **VTeX: Select Build Method** - Choose between local, Docker, or auto-detection
 - **VTeX: Detect Environment** - Show information about available LaTeX environments
 
-### Configuration
+### Project Templates (Phase 3) 🆕
+- **VTeX: New Project from Template** - Create new project from professional templates
+  - Article, Beamer, Book, Thesis, CV, Letter
 
-Access settings via VS Code settings (`Ctrl+,` or `Cmd+,`) and search for "VTeX":
+### Bibliography (Phase 3) 🆕
+- **VTeX: Insert Citation** - Interactive citation picker
+- Auto-completion when typing `\cite{` - Shows all citations from .bib files
 
-#### Build Method
+### Project Management (Phase 3) 🆕
+- **VTeX: Find Root File** - Show detected root file for multi-file projects
+- **VTeX: Analyze Project Structure** - Display project statistics
+
+### LSP & Navigation (Phase 2)
+- **VTeX: Install/Update texlab** - Install or update the texlab language server
+- **VTeX: Forward Search** (`Ctrl+Alt+J`) - Jump from editor to PDF
+- **Ctrl+Click in PDF** - Jump from PDF back to source (inverse search)
+
+*See [COMMANDS.md](COMMANDS.md) for complete command reference*
+
+## Configuration
+
+Access settings via VS Code settings (`Ctrl+,`) and search for "VTeX":
+
+### Build Settings
 ```json
-"vtex.buildMethod": "auto"  // Options: "auto", "local", "docker"
-```
-- `auto`: Automatically detect and use available system (local first, then Docker)
-- `local`: Force use of local TeX Live installation
-- `docker`: Force use of Docker containerized build
-
-#### Build Engine
-```json
-"vtex.buildEngine": "latexmk"  // Options: "latexmk", "pdflatex", "xelatex", "lualatex"
-```
-
-#### Docker Settings
-```json
-"vtex.docker.image": "texlive/texlive:latest",
-"vtex.docker.enableCache": true  // Cache packages in Docker volume
-```
-
-#### Auto-build
-```json
-"vtex.buildOnSave": true  // Build automatically when saving .tex files
-```
-
-#### Advanced Options
-```json
-"vtex.latexmk.options": [
+{
+  "vtex.buildMethod": "auto",           // auto | local | docker
+  "vtex.buildEngine": "latexmk",        // latexmk | pdflatex | xelatex | lualatex
+  "vtex.buildOnSave": true,             // Auto-build on save
+  "vtex.latexmk.options": [             // Custom latexmk options
     "-pdf",
     "-interaction=nonstopmode",
     "-synctex=1",
     "-file-line-error"
-],
-"vtex.showOutputChannel": "onError"  // Options: "never", "onError", "always"
+  ]
+}
+```
+
+### Docker Settings
+```json
+{
+  "vtex.docker.image": "texlive/texlive:latest",
+  "vtex.docker.enableCache": true       // Cache packages in Docker volume
+}
+```
+
+### Project Settings (Phase 3) 🆕
+```json
+{
+  "vtex.rootFile": "main.tex"           // Specify root file for multi-file projects
+}
+```
+
+### Output & Display
+```json
+{
+  "vtex.outputDirectory": "out",        // Build output directory
+  "vtex.showOutputChannel": "onError"   // never | onError | always
+}
+```
+
+### LSP Settings
+```json
+{
+  "vtex.lsp.enabled": true,             // Enable texlab LSP
+  "vtex.texlab.path": ""                // Custom texlab binary path (optional)
+}
 ```
 
 ## Project Structure
@@ -95,12 +180,20 @@ Access settings via VS Code settings (`Ctrl+,` or `Cmd+,`) and search for "VTeX"
 ```
 vtex/
 ├── src/
-│   ├── extension.ts           # Main entry point
+│   ├── extension.ts               # Main entry point
 │   ├── buildSystem/
-│   │   ├── builder.ts         # Build system orchestrator
-│   │   ├── detector.ts        # Environment detection
-│   │   ├── localBuilder.ts    # Local TeX Live builder
-│   │   ├── dockerBuilder.ts   # Docker builder
+│   │   ├── builder.ts             # Build system orchestrator
+│   │   ├── detector.ts            # Environment detection
+│   │   ├── localBuilder.ts        # Local TeX Live builder
+│   │   ├── dockerBuilder.ts       # Docker builder
+│   │   ├── errorParser.ts         # Parse LaTeX errors
+│   │   └── packageManager.ts      # Package detection & installation (Phase 3) 🆕
+│   ├── templates/
+│   │   └── templateManager.ts     # Project templates (Phase 3) 🆕
+│   ├── project/
+│   │   └── projectManager.ts      # Multi-file projects (Phase 3) 🆕
+│   ├── bibliography/
+│   │   └── bibliographyManager.ts # Citation management (Phase 3) 🆕
 │   │   └── errorParser.ts     # LaTeX log parser
 │   ├── preview/
 │   │   └── pdfPreview.ts      # PDF preview management

@@ -79,12 +79,34 @@ export class LocalBuilder implements IBuilder {
                 pdfPath: pdfExists ? pdfPath : undefined
             };
         } catch (error: any) {
-            this.logger.error(`Build failed: ${error.message}`);
-            const errors = this.errorParser.parse(error.stdout || error.message);
+            // latexmk may return non-zero exit code even if PDF was generated
+            // (e.g., undefined references, citations, or minor errors)
+            this.logger.warn(`Build command returned non-zero exit code: ${error.message}`);
             
+            const output = (error.stdout || '') + (error.stderr || '') + error.message;
+            const errors = this.errorParser.parse(output);
+            
+            // Check if PDF was actually generated despite the error
+            const pdfPath = path.join(docDir, `${docName}.pdf`);
+            const pdfExists = await this.fileExists(pdfPath);
+            
+            if (pdfExists) {
+                this.logger.info('PDF was generated despite non-zero exit code');
+                // Check if there are any fatal errors (not just warnings)
+                const fatalErrors = errors.filter(e => e.severity === 'error' && !this.isNonFatalError(e.message));
+                
+                return {
+                    success: fatalErrors.length === 0,
+                    output,
+                    errors,
+                    pdfPath
+                };
+            }
+            
+            this.logger.error('Build failed and no PDF was generated');
             return {
                 success: false,
-                output: error.stdout || error.message,
+                output,
                 errors
             };
         }
@@ -121,5 +143,24 @@ export class LocalBuilder implements IBuilder {
         } catch {
             return false;
         }
+    }
+
+    /**
+     * Check if an error message represents a non-fatal error
+     * (e.g., undefined references, citations) that shouldn't prevent PDF display
+     */
+    private isNonFatalError(message: string): boolean {
+        const nonFatalPatterns = [
+            /undefined references/i,
+            /undefined citations/i,
+            /label.*multiply defined/i,
+            /reference.*undefined/i,
+            /citation.*undefined/i,
+            /there were undefined/i,
+            /rerun to get/i,
+            /label\(s\) may have changed/i
+        ];
+        
+        return nonFatalPatterns.some(pattern => pattern.test(message));
     }
 }
