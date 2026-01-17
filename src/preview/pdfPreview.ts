@@ -182,54 +182,116 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
     <title>PDF Preview</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             margin: 0;
             padding: 0;
-            background-color: #525252;
+            background-color: #2b3e50;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         }
         
-        #controls {
-            background-color: #333;
-            color: white;
-            padding: 10px;
+        #toolbar {
+            background-color: #34495e;
+            color: #ecf0f1;
+            padding: 10px 20px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             z-index: 10;
+            min-height: 52px;
         }
         
-        #controls button {
-            background-color: #007acc;
-            color: white;
-            border: none;
-            padding: 6px 12px;
+        .toolbar-button {
+            background-color: transparent;
+            color: #ecf0f1;
+            border: 1px solid #4a5f7f;
+            padding: 8px 12px;
             cursor: pointer;
-            border-radius: 3px;
-            font-size: 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            min-width: 36px;
+            justify-content: center;
         }
         
-        #controls button:hover {
-            background-color: #005a9e;
+        .toolbar-button:hover:not(:disabled) {
+            background-color: #4a5f7f;
+            border-color: #5a7ea0;
         }
         
-        #controls button:disabled {
-            background-color: #555;
+        .toolbar-button:active:not(:disabled) {
+            background-color: #3a4f6f;
+        }
+        
+        .toolbar-button:disabled {
+            opacity: 0.4;
             cursor: not-allowed;
         }
         
-        #pageInfo {
-            flex-grow: 1;
-            text-align: center;
+        .toolbar-button svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+        
+        .toolbar-separator {
+            width: 1px;
+            height: 24px;
+            background-color: #4a5f7f;
+            margin: 0 6px;
+        }
+        
+        #pageIndicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 10px;
+            color: #ecf0f1;
             font-size: 14px;
         }
         
-        #zoomInfo {
+        #pageNum {
+            background-color: #2c3e50;
+            border: 1px solid #4a5f7f;
+            color: #ecf0f1;
+            padding: 6px 12px;
+            border-radius: 4px;
+            width: 60px;
+            text-align: center;
             font-size: 14px;
+            outline: none;
+        }
+        
+        #pageNum:focus {
+            border-color: #3498db;
+            background-color: #34495e;
+        }
+        
+        #zoomLevel {
+            background-color: #2c3e50;
+            border: 1px solid #4a5f7f;
+            color: #ecf0f1;
+            padding: 6px 12px;
+            border-radius: 4px;
+            min-width: 65px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .spacer {
+            flex-grow: 1;
         }
         
         #pdfContainer {
@@ -239,24 +301,24 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
             justify-content: center;
             align-items: flex-start;
             padding: 20px;
+            background-color: #2b3e50;
         }
         
         #pdfCanvas {
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             background: white;
-            max-width: 100%;
-            height: auto;
+            display: block;
         }
         
         .loading {
-            color: white;
+            color: #ecf0f1;
             text-align: center;
             padding: 50px;
             font-size: 18px;
         }
         
         .error {
-            color: #ff6b6b;
+            color: #e74c3c;
             text-align: center;
             padding: 50px;
             font-size: 16px;
@@ -264,17 +326,49 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
     </style>
 </head>
 <body>
-    <div id="controls">
-        <button id="prevPage" title="Previous Page">← Prev</button>
-        <button id="nextPage" title="Next Page">Next →</button>
-        <span id="pageInfo">Page <input type="number" id="pageInput" min="1" value="1" style="width: 60px; text-align: center;"> of <span id="totalPages">-</span></span>
-        <button id="zoomOut" title="Zoom Out">−</button>
-        <span id="zoomInfo"><span id="zoomLevel">100</span>%</span>
-        <button id="zoomIn" title="Zoom In">+</button>
-        <button id="resetZoom" title="Reset Zoom to 100%">Reset Zoom</button>
-        <button id="fitWidth" title="Fit Width">Fit Width</button>
-        <button id="forwardSearch" title="Forward Search (Ctrl+Alt+J)">Editor → PDF</button>
-        <button id="refresh" title="Refresh PDF">⟳ Refresh</button>
+    <div id="toolbar">
+        <button class="toolbar-button" id="prevPage" title="Previous Page (←)">
+            <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        
+        <div id="pageIndicator">
+            <input type="number" id="pageNum" min="1" value="1">
+            <span>/ <span id="pageCount">0</span></span>
+        </div>
+        
+        <button class="toolbar-button" id="nextPage" title="Next Page (→)">
+            <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </button>
+        
+        <div class="toolbar-separator"></div>
+        
+        <button class="toolbar-button" id="zoomOut" title="Zoom Out (-)">
+            <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+        </button>
+        
+        <div id="zoomLevel">100%</div>
+        
+        <button class="toolbar-button" id="zoomIn" title="Zoom In (+)">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        </button>
+        
+        <div class="toolbar-separator"></div>
+        
+        <button class="toolbar-button" id="fitWidth" title="Fit Width">
+            <svg viewBox="0 0 24 24"><path d="M3 5v14h18V5H3zm16 12H5V7h14v10z"/></svg>
+            Fit Width
+        </button>
+        
+        <button class="toolbar-button" id="fitPage" title="Fit Page">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
+            Fit Page
+        </button>
+        
+        <div class="spacer"></div>
+        
+        <button class="toolbar-button" id="refresh" title="Refresh PDF">
+            <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        </button>
     </div>
     
     <div id="pdfContainer">
@@ -282,9 +376,7 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
     </div>
 
     <script>
-        // Acquire VS Code API once and reuse it
         const vscode = acquireVsCodeApi();
-        
         const pdfUrl = '${pdfDataUri}';
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         
@@ -292,6 +384,7 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
         let currentPage = 1;
         let scale = 1.5;
         let rendering = false;
+        let fitMode = null; // null, 'width', or 'page'
         
         const canvas = document.getElementById('pdfCanvas');
         const ctx = canvas.getContext('2d');
@@ -300,8 +393,14 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
         // Load PDF
         async function loadPDF() {
             try {
+                container.innerHTML = '<div class="loading">Loading PDF...</div>';
                 pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
-                document.getElementById('totalPages').textContent = pdfDoc.numPages;
+                document.getElementById('pageCount').textContent = pdfDoc.numPages;
+                
+                // Restore canvas
+                container.innerHTML = '';
+                container.appendChild(canvas);
+                
                 renderPage(currentPage);
                 updateControls();
             } catch (error) {
@@ -312,11 +411,26 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
         
         // Render page
         async function renderPage(pageNum) {
-            if (rendering) return;
+            if (rendering || !pdfDoc) return;
             rendering = true;
             
             try {
                 const page = await pdfDoc.getPage(pageNum);
+                
+                // Calculate scale based on fit mode
+                if (fitMode === 'width') {
+                    const containerWidth = container.clientWidth - 40;
+                    const viewport = page.getViewport({ scale: 1.0 });
+                    scale = containerWidth / viewport.width;
+                } else if (fitMode === 'page') {
+                    const containerWidth = container.clientWidth - 40;
+                    const containerHeight = container.clientHeight - 40;
+                    const viewport = page.getViewport({ scale: 1.0 });
+                    const scaleX = containerWidth / viewport.width;
+                    const scaleY = containerHeight / viewport.height;
+                    scale = Math.min(scaleX, scaleY);
+                }
+                
                 const viewport = page.getViewport({ scale: scale });
                 
                 canvas.width = viewport.width;
@@ -331,6 +445,9 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
                 
                 currentPage = pageNum;
                 updateControls();
+                
+                // Scroll to top of page
+                container.scrollTop = 0;
             } catch (error) {
                 console.error('Error rendering page:', error);
             } finally {
@@ -341,9 +458,9 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
         function updateControls() {
             document.getElementById('prevPage').disabled = currentPage <= 1;
             document.getElementById('nextPage').disabled = currentPage >= pdfDoc.numPages;
-            document.getElementById('zoomLevel').textContent = Math.round(scale * 100);
-            document.getElementById('pageInput').value = currentPage;
-            document.getElementById('pageInput').max = pdfDoc.numPages;
+            document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + '%';
+            document.getElementById('pageNum').value = currentPage;
+            document.getElementById('pageNum').max = pdfDoc.numPages;
         }
         
         // Navigation
@@ -359,49 +476,43 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
             }
         });
 
-        // Page input handler
-        document.getElementById('pageInput').addEventListener('change', (e) => {
+        // Page number input
+        document.getElementById('pageNum').addEventListener('change', (e) => {
             let pageNum = parseInt(e.target.value);
-            if (pageNum < 1) pageNum = 1;
+            if (isNaN(pageNum) || pageNum < 1) pageNum = 1;
             if (pageNum > pdfDoc.numPages) pageNum = pdfDoc.numPages;
             renderPage(pageNum);
         });
 
-        document.getElementById('pageInput').addEventListener('keydown', (e) => {
+        document.getElementById('pageNum').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                let pageNum = parseInt(e.target.value);
-                if (pageNum < 1) pageNum = 1;
-                if (pageNum > pdfDoc.numPages) pageNum = pdfDoc.numPages;
-                renderPage(pageNum);
                 e.target.blur();
             }
         });
         
-        // Zoom
+        // Zoom controls
         document.getElementById('zoomIn').addEventListener('click', () => {
-            scale *= 1.2;
+            fitMode = null;
+            scale *= 1.25;
+            if (scale > 5.0) scale = 5.0;
             renderPage(currentPage);
         });
         
         document.getElementById('zoomOut').addEventListener('click', () => {
-            scale /= 1.2;
+            fitMode = null;
+            scale /= 1.25;
+            if (scale < 0.25) scale = 0.25;
             renderPage(currentPage);
         });
         
         document.getElementById('fitWidth').addEventListener('click', () => {
-            const containerWidth = container.clientWidth - 40;
-            scale = containerWidth / (canvas.width / scale);
+            fitMode = 'width';
             renderPage(currentPage);
         });
-
-        document.getElementById('resetZoom').addEventListener('click', () => {
-            scale = 1.0;
+        
+        document.getElementById('fitPage').addEventListener('click', () => {
+            fitMode = 'page';
             renderPage(currentPage);
-        });
-
-        // Forward search button
-        document.getElementById('forwardSearch').addEventListener('click', () => {
-            vscode.postMessage({ type: 'triggerForwardSearch' });
         });
         
         // Refresh
@@ -411,41 +522,66 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
         
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
+            // Don't trigger shortcuts if input is focused
+            if (document.activeElement.tagName === 'INPUT') return;
+            
             if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
                 document.getElementById('prevPage').click();
             } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+                e.preventDefault();
                 document.getElementById('nextPage').click();
             } else if (e.key === '+' || e.key === '=') {
+                e.preventDefault();
                 document.getElementById('zoomIn').click();
             } else if (e.key === '-' || e.key === '_') {
+                e.preventDefault();
                 document.getElementById('zoomOut').click();
+            } else if (e.key === '0') {
+                e.preventDefault();
+                fitMode = null;
+                scale = 1.0;
+                renderPage(currentPage);
             }
         });
         
-        // Listen for SyncTeX position messages from extension
+        // Mouse wheel zoom (with Ctrl)
+        container.addEventListener('wheel', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                fitMode = null;
+                
+                if (e.deltaY < 0) {
+                    scale *= 1.1;
+                    if (scale > 5.0) scale = 5.0;
+                } else {
+                    scale /= 1.1;
+                    if (scale < 0.25) scale = 0.25;
+                }
+                
+                renderPage(currentPage);
+            }
+        });
+        
+        // Listen for SyncTeX position messages
         window.addEventListener('message', event => {
             const message = event.data;
             if (message.type === 'scrollToPosition') {
-                // Navigate to the specified page
                 if (message.page && message.page !== currentPage) {
                     renderPage(message.page);
                 }
-                // TODO: Scroll to exact x,y position within page if needed
-                // This would require calculating viewport coordinates from PDF coordinates
             }
         });
 
         // Inverse search: Ctrl+Click on PDF → jump to source
-        canvas.addEventListener('click', async (event) => {
-            if (event.ctrlKey || event.metaKey) {
-                event.preventDefault();
+        canvas.addEventListener('click', async (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
                 
-                // Get click coordinates relative to canvas
                 const rect = canvas.getBoundingClientRect();
-                const x = event.clientX - rect.left;
-                const y = event.clientY - rect.top;
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
                 
-                // Convert canvas coordinates to PDF coordinates
                 const page = await pdfDoc.getPage(currentPage);
                 const viewport = page.getViewport({ scale: scale });
                 
