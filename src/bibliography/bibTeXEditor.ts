@@ -260,6 +260,19 @@ export class BibTeXEditor {
         input:focus, select:focus, textarea:focus {
             outline: 1px solid var(--vscode-focusBorder);
         }
+        input.invalid {
+            border-color: var(--vscode-inputValidation-errorBorder);
+            background-color: var(--vscode-inputValidation-errorBackground);
+        }
+        .error-message {
+            color: var(--vscode-errorForeground);
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
         .button-group {
             display: flex;
             gap: 10px;
@@ -314,6 +327,7 @@ export class BibTeXEditor {
             <input type="text" id="key" name="key" value="${entry.key}" 
                    placeholder="e.g., Einstein1905" required>
             <div class="info">Unique identifier for this reference (no spaces)</div>
+            <div class="error-message" id="keyError">Citation key cannot contain spaces</div>
         </div>
 
         <div class="form-group">
@@ -360,10 +374,33 @@ export class BibTeXEditor {
         const form = document.getElementById('bibtexForm');
         const typeSelect = document.getElementById('type');
         const cancelBtn = document.getElementById('cancelBtn');
+        const keyInput = document.getElementById('key');
+        const keyError = document.getElementById('keyError');
+
+        // Validate citation key (no spaces)
+        keyInput.addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (value.includes(' ')) {
+                keyInput.classList.add('invalid');
+                keyError.classList.add('show');
+            } else {
+                keyInput.classList.remove('invalid');
+                keyError.classList.remove('show');
+            }
+        });
 
         // Handle form submission
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            
+            // Validate key before submission
+            const key = keyInput.value;
+            if (key.includes(' ')) {
+                keyInput.classList.add('invalid');
+                keyError.classList.add('show');
+                keyInput.focus();
+                return;
+            }
             
             const formData = new FormData(form);
             const entry = {

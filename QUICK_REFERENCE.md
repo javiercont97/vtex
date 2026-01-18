@@ -108,3 +108,51 @@ Add to `.vscode/settings.json`:
 - BibTeX editor works with any .bib file in your workspace
 - Native PDF viewer doesn't support SyncTeX features
 - All features are backward compatible - existing workflows continue to work
+
+---
+
+# Phase 4 Features Quick Reference
+
+## 📐 Equation Editor (NEW)
+**Command**: `VTeX: Open Equation Editor`
+
+**Three Modes**:
+- **Inline** ($...$): For inline math
+- **Display** (\[...\]): For centered display
+- **Equation** (\begin{equation}): For numbered equations
+
+**Click-to-Edit**: Enable inline decorations to see "✏️ Edit Equation" CodeLens above equations
+
+## 🖼️ Figure Management (ENHANCED)
+- File extensions now preserved in paths
+- Hover previews for images
+- Toggle inline decorations: `VTeX: Toggle Inline Previews`
+
+## 📊 Table Editor (NEW)
+**Command**: `VTeX: Open Table Editor`
+- Visual grid editing
+- Add/remove rows and columns
+- Column alignment controls
+- Live LaTeX preview
+
+## 📈 Plot Generator (NEW)
+8 plot types: line, scatter, bar, function, histogram, contour, 3D, polar
+
+## 🎨 TikZ Preview (NEW)
+Preview TikZ diagrams as SVG, insert templates, compile standalone
+
+## ✅ Grammar Checker (NEW)
+LanguageTool integration for grammar and style checking
+
+## 🔧 Macro Wizard (NEW)
+Create custom commands, parametric macros, and environments
+
+## ⚡ Performance Optimizer (NEW)
+Incremental builds for faster compilation of large projects
+
+## 🔍 PDF Viewer (ENHANCED)
+**Zoom now preserved** across rebuilds - your zoom preference is remembered!
+
+---
+
+*See PHASE4_BUGFIX_SUMMARY.md for detailed feature documentation*

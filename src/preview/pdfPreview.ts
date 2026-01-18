@@ -6,6 +6,9 @@ import { Logger } from '../utils/logger';
 export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
     private panels: Map<string, vscode.WebviewPanel> = new Map();
     private panelDocuments: Map<string, vscode.Uri> = new Map();
+    private zoomLevels: Map<string, number> = new Map(); // Track zoom per PDF
+    private fitModes: Map<string, string | null> = new Map(); // Track fit mode per PDF
+    private currentPages: Map<string, number> = new Map(); // Track current page per PDF
     private inverseSearchCallback?: (pdfPath: string, page: number, x: number, y: number) => Promise<void>;
 
     constructor(
@@ -54,6 +57,18 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
                 } catch (error: any) {
                     this.logger.error(`Inverse search failed: ${error.message}`);
                 }
+            } else if (message.type === 'zoomChange') {
+                // Save zoom level for this PDF
+                this.zoomLevels.set(pdfPath, message.zoom);
+                this.logger.info(`Saved zoom level ${message.zoom} for ${pdfPath}`);
+            } else if (message.type === 'fitModeChange') {
+                // Save fit mode for this PDF
+                this.fitModes.set(pdfPath, message.fitMode);
+                this.logger.info(`Saved fit mode ${message.fitMode} for ${pdfPath}`);
+            } else if (message.type === 'pageChange') {
+                // Save current page for this PDF
+                this.currentPages.set(pdfPath, message.page);
+                this.logger.info(`Saved page ${message.page} for ${pdfPath}`);
             }
         });
     }
@@ -122,6 +137,18 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
                 async (message) => {
                     if (message.type === 'inverseSearch' && this.inverseSearchCallback) {
                         await this.inverseSearchCallback(pdfPath, message.page, message.x, message.y);
+                    } else if (message.type === 'zoomChange') {
+                        // Save zoom level for this PDF
+                        this.zoomLevels.set(pdfPath, message.zoom);
+                        this.logger.info(`Saved zoom level ${message.zoom} for ${pdfPath}`);
+                    } else if (message.type === 'fitModeChange') {
+                        // Save fit mode for this PDF
+                        this.fitModes.set(pdfPath, message.fitMode);
+                        this.logger.info(`Saved fit mode ${message.fitMode} for ${pdfPath}`);
+                    } else if (message.type === 'pageChange') {
+                        // Save current page for this PDF
+                        this.currentPages.set(pdfPath, message.page);
+                        this.logger.info(`Saved page ${message.page} for ${pdfPath}`);
                     } else if (message.type === 'triggerForwardSearch') {
                         // Get the document associated with this PDF panel
                         const docUri = this.panelDocuments.get(panelKey);
@@ -164,15 +191,20 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
             const pdfBase64 = pdfBuffer.toString('base64');
             const pdfDataUri = `data:application/pdf;base64,${pdfBase64}`;
             
-            panel.webview.html = this.getWebviewContent(pdfDataUri);
-            this.logger.info(`PDF loaded: ${pdfPath} (${pdfBuffer.length} bytes)`);
+            // Get saved zoom level, fit mode, and page for this PDF
+            const savedZoom = this.zoomLevels.get(pdfPath) || 1.5;
+            const savedFitMode = this.fitModes.get(pdfPath) || null;
+            const savedPage = this.currentPages.get(pdfPath) || 1;
+            
+            panel.webview.html = this.getWebviewContent(pdfDataUri, savedZoom, savedFitMode, savedPage);
+            this.logger.info(`PDF loaded: ${pdfPath} (${pdfBuffer.length} bytes), zoom: ${savedZoom}, fitMode: ${savedFitMode}, page: ${savedPage}`);
         } catch (error) {
             this.logger.error(`Failed to read PDF file: ${error}`);
             panel.webview.html = this.getErrorContent(`Failed to read PDF: ${error}`);
         }
     }
 
-    private getWebviewContent(pdfDataUri: string): string {
+    private getWebviewContent(pdfDataUri: string, initialZoom: number = 1.5, initialFitMode: string | null = null, initialPage: number = 1): string {
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -388,10 +420,10 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         
         let pdfDoc = null;
-        let currentPage = 1;
-        let scale = 1.5;
+        let currentPage = ${initialPage};
+        let scale = ${initialZoom};
         let rendering = false;
-        let fitMode = null; // null, 'width', or 'page'
+        let fitMode = ${initialFitMode ? `'${initialFitMode}'` : 'null'}; // null, 'width', or 'page'
         
         const canvas = document.getElementById('pdfCanvas');
         const ctx = canvas.getContext('2d');
@@ -455,6 +487,9 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
                 
                 // Scroll to top of page
                 container.scrollTop = 0;
+                
+                // Notify extension of page change
+                vscode.postMessage({ type: 'pageChange', page: currentPage });
             } catch (error) {
                 console.error('Error rendering page:', error);
             } finally {
@@ -503,6 +538,8 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
             scale *= 1.25;
             if (scale > 5.0) scale = 5.0;
             renderPage(currentPage);
+            vscode.postMessage({ type: 'zoomChange', zoom: scale });
+            vscode.postMessage({ type: 'fitModeChange', fitMode: null });
         });
         
         document.getElementById('zoomOut').addEventListener('click', () => {
@@ -510,16 +547,20 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
             scale /= 1.25;
             if (scale < 0.25) scale = 0.25;
             renderPage(currentPage);
+            vscode.postMessage({ type: 'zoomChange', zoom: scale });
+            vscode.postMessage({ type: 'fitModeChange', fitMode: null });
         });
         
         document.getElementById('fitWidth').addEventListener('click', () => {
             fitMode = 'width';
             renderPage(currentPage);
+            vscode.postMessage({ type: 'fitModeChange', fitMode: fitMode });
         });
         
         document.getElementById('fitPage').addEventListener('click', () => {
             fitMode = 'page';
             renderPage(currentPage);
+            vscode.postMessage({ type: 'fitModeChange', fitMode: fitMode });
         });
         
         // Refresh
