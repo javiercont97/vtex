@@ -30,6 +30,8 @@ import { EquationDecorationProvider } from './editor/equationDecorationProvider'
 import { ImageHoverProvider } from './editor/imageHoverProvider';
 import { ImageDecorationProvider } from './editor/imageDecorationProvider';
 import { FigureEditor } from './editor/figureEditor';
+import { TikZEditor } from './editor/tikzEditor';
+import { TikZHoverProvider } from './editor/tikzHoverProvider';
 
 let buildSystem: BuildSystem;
 let pdfPreview: PDFPreview;
@@ -58,6 +60,8 @@ let equationDecorationProvider: EquationDecorationProvider;
 let imageHoverProvider: ImageHoverProvider;
 let imageDecorationProvider: ImageDecorationProvider;
 let figureEditor: FigureEditor;
+let tikzEditor: TikZEditor;
+let tikzHoverProvider: TikZHoverProvider;
 let outputChannel: vscode.OutputChannel;
 let logger: Logger;
 
@@ -102,6 +106,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Initialize Phase 4 features
     figureManager = new FigureManager(context, logger);
     tikzPreview = new TikZPreview(context, logger);
+    tikzPreview.setBuildSystem(buildSystem); // Connect to build system
     plotGenerator = new PlotGenerator(context, logger);
     equationEditor = new EquationEditor(context, logger);
     grammarChecker = new GrammarChecker(context, logger);
@@ -115,6 +120,13 @@ export async function activate(context: vscode.ExtensionContext) {
     equationDecorationProvider = new EquationDecorationProvider(context, logger);
     imageHoverProvider = new ImageHoverProvider(context, logger);
     figureEditor = new FigureEditor(context, logger);
+    tikzHoverProvider = new TikZHoverProvider(context, tikzPreview, logger);
+    
+    // Initialize experimental features if enabled
+    if (config.getExperimentalTikZEditor()) {
+        tikzEditor = new TikZEditor(context, logger);
+        logger.info('TikZ Editor (experimental) initialized');
+    }
 
     // Register inline decorator commands
     context.subscriptions.push(...inlineDecorator.registerCommands());
@@ -151,6 +163,14 @@ export async function activate(context: vscode.ExtensionContext) {
         )
     );
 
+    // Register TikZ hover provider
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider(
+            { language: 'latex', scheme: 'file' },
+            tikzHoverProvider
+        )
+    );
+
     // Register equation decoration provider (gutter icons)
     context.subscriptions.push(equationDecorationProvider);
 
@@ -183,7 +203,7 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     // Register commands
-    registerCommands(context);
+    registerCommands(context, config);
 
     // Set up auto-build on save
     setupAutoBuild(context, config);
@@ -194,7 +214,7 @@ export async function activate(context: vscode.ExtensionContext) {
     logger.info('VTeX extension activated successfully');
 }
 
-function registerCommands(context: vscode.ExtensionContext) {
+function registerCommands(context: vscode.ExtensionContext, config: Config) {
     // Build command
     context.subscriptions.push(
         vscode.commands.registerCommand('vtex.build', async () => {
@@ -519,6 +539,22 @@ function registerCommands(context: vscode.ExtensionContext) {
     // Phase 4: Equation Editor
     context.subscriptions.push(...equationEditor.registerCommands());
 
+    // Phase 4: TikZ Editor (Experimental)
+    if (config.getExperimentalTikZEditor() && tikzEditor) {
+        context.subscriptions.push(
+            vscode.commands.registerCommand('vtex.openTikZEditor', async (uri?: vscode.Uri, range?: vscode.Range) => {
+                if (uri && range) {
+                    const document = await vscode.workspace.openTextDocument(uri);
+                    const tikzCode = document.getText(range);
+                    await tikzEditor.openEditor(tikzCode, range);
+                } else {
+                    await tikzEditor.openEditor();
+                }
+            })
+        );
+        logger.info('TikZ Editor command registered');
+    }
+
     // Phase 4: Figure Editor
     context.subscriptions.push(
         vscode.commands.registerCommand('vtex.openFigureEditor', async (uri?: vscode.Uri, range?: vscode.Range) => {
@@ -647,15 +683,24 @@ function registerCommands(context: vscode.ExtensionContext) {
             // Extract TikZ code
             const tikzMatch = figureText.match(/\\begin\{tikzpicture\}[\s\S]*?\\end\{tikzpicture\}/);
             if (tikzMatch) {
-                // Use TikZ preview with the extracted code
-                await vscode.commands.executeCommand('vtex.previewTikz');
+                await tikzPreview.previewTikzCode(tikzMatch[0], 'TikZ Preview (from Figure)');
+            } else {
+                vscode.window.showErrorMessage('No TikZ code found in this figure environment');
             }
         })
     );
 
     context.subscriptions.push(
         vscode.commands.registerCommand('vtex.previewTikzStandalone', async (uri: vscode.Uri, range: vscode.Range) => {
-            await vscode.commands.executeCommand('vtex.previewTikz');
+            const document = await vscode.workspace.openTextDocument(uri);
+            const tikzText = document.getText(range);
+            
+            // Verify it's a tikzpicture
+            if (/\\begin\{tikzpicture\}/.test(tikzText)) {
+                await tikzPreview.previewTikzCode(tikzText, 'TikZ Preview');
+            } else {
+                vscode.window.showErrorMessage('Selected range does not contain a TikZ environment');
+            }
         })
     );
 

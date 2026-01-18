@@ -20,6 +20,10 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
 
         const codeLenses: vscode.CodeLens[] = [];
         const text = document.getText();
+        
+        // Check if TikZ editor experimental feature is enabled
+        const config = vscode.workspace.getConfiguration('vtex');
+        const tikzEditorEnabled = config.get<boolean>('experimental.enableTikZEditor', false);
 
         // Find figure environments
         const figureRegex = /\\begin\{figure\}[\s\S]*?\\end\{figure\}/g;
@@ -37,35 +41,31 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
             const hasIncludeGraphics = /\\includegraphics/.test(figureContent);
             const hasTikzpicture = /\\begin\{tikzpicture\}/.test(figureContent);
             
-            // Edit Figure button
-            codeLenses.push(
-                new vscode.CodeLens(codeLensRange, {
-                    title: '🖼️ Edit Figure',
-                    tooltip: 'Open figure editor',
-                    command: 'vtex.openFigureEditor',
-                    arguments: [document.uri, fullRange]
-                })
-            );
+            // Edit Figure button - only for figures with includegraphics
+            if (hasIncludeGraphics) {
+                codeLenses.push(
+                    new vscode.CodeLens(codeLensRange, {
+                        title: '🖼️ Edit Figure',
+                        tooltip: 'Open figure editor',
+                        command: 'vtex.openFigureEditor',
+                        arguments: [document.uri, fullRange]
+                    })
+                );
+            }
             
             // Additional buttons based on content
             if (hasTikzpicture) {
-                codeLenses.push(
-                    new vscode.CodeLens(codeLensRange, {
-                        title: '👁️ Preview TikZ',
-                        tooltip: 'Preview TikZ diagram',
-                        command: 'vtex.previewTikzInFigure',
-                        arguments: [document.uri, fullRange]
-                    })
-                );
-                
-                codeLenses.push(
-                    new vscode.CodeLens(codeLensRange, {
-                        title: '✏️ Edit TikZ',
-                        tooltip: 'Open TikZ editor',
-                        command: 'vtex.editTikz',
-                        arguments: [document.uri, fullRange]
-                    })
-                );
+                // Only show TikZ editor if experimental feature is enabled
+                if (tikzEditorEnabled) {
+                    codeLenses.push(
+                        new vscode.CodeLens(codeLensRange, {
+                            title: '✏️ Edit TikZ',
+                            tooltip: 'Open TikZ WYSIWYG editor (Experimental)',
+                            command: 'vtex.openTikZEditor',
+                            arguments: [document.uri, fullRange]
+                        })
+                    );
+                }
             }
             
             if (hasIncludeGraphics) {
@@ -148,14 +148,17 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
                 const fullRange = new vscode.Range(startPos, endPos);
                 const codeLensRange = new vscode.Range(startPos, startPos);
                 
-                codeLenses.push(
-                    new vscode.CodeLens(codeLensRange, {
-                        title: '👁️ Preview TikZ',
-                        tooltip: 'Preview TikZ diagram',
-                        command: 'vtex.previewTikzStandalone',
-                        arguments: [document.uri, fullRange]
-                    })
-                );
+                // Only show TikZ editor if experimental feature is enabled
+                if (tikzEditorEnabled) {
+                    codeLenses.push(
+                        new vscode.CodeLens(codeLensRange, {
+                            title: '✏️ Edit TikZ',
+                            tooltip: 'Open TikZ WYSIWYG editor (Experimental)',
+                            command: 'vtex.openTikZEditor',
+                            arguments: [document.uri, fullRange]
+                        })
+                    );
+                }
                 
                 codeLenses.push(
                     new vscode.CodeLens(codeLensRange, {

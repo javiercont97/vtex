@@ -4,8 +4,10 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as crypto from 'crypto';
 import { Logger } from '../utils/logger';
+import { BuildSystem } from '../buildSystem/builder';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { Jimp } from 'jimp';
 
 const execAsync = promisify(exec);
 
@@ -14,8 +16,10 @@ const execAsync = promisify(exec);
  */
 export class TikZPreview {
     private previewPanel: vscode.WebviewPanel | undefined;
-    private tikzCache: Map<string, { svg: string; timestamp: number }> = new Map();
+    private tikzCache: Map<string, { png: string; timestamp: number }> = new Map();
     private tempDir: string;
+    private buildSystem: BuildSystem | null = null;
+    private renderingPanel: vscode.WebviewPanel | undefined;
 
     constructor(
         private readonly context: vscode.ExtensionContext,
@@ -28,6 +32,13 @@ export class TikZPreview {
     }
 
     /**
+     * Set the build system to use for compilation
+     */
+    public setBuildSystem(buildSystem: BuildSystem): void {
+        this.buildSystem = buildSystem;
+    }
+
+    /**
      * Register TikZ preview commands
      */
     public registerCommands(): vscode.Disposable[] {
@@ -36,6 +47,30 @@ export class TikZPreview {
             vscode.commands.registerCommand('vtex.compileTikzStandalone', () => this.compileTikzStandalone()),
             vscode.commands.registerCommand('vtex.insertTikzTemplate', () => this.insertTikzTemplate())
         ];
+    }
+
+    /**
+     * Preview TikZ code directly
+     */
+    public async previewTikzCode(tikzCode: string, title: string = 'TikZ Preview'): Promise<void> {
+        if (!tikzCode || !tikzCode.includes('\\begin{tikzpicture}')) {
+            vscode.window.showErrorMessage('Invalid TikZ code provided');
+            return;
+        }
+
+        vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: 'Compiling TikZ preview...',
+            cancellable: false
+        }, async () => {
+            try {
+                const png = await this.compileTikzToPng(tikzCode);
+                this.showPreview(png, title);
+            } catch (error) {
+                vscode.window.showErrorMessage(`TikZ compilation failed: ${error}`);
+                this.logger.error(`TikZ compilation error: ${error}`);
+            }
+        });
     }
 
     /**
@@ -62,8 +97,8 @@ export class TikZPreview {
             cancellable: false
         }, async () => {
             try {
-                const svg = await this.compileTikzToSvg(tikzCode);
-                this.showPreview(svg, 'TikZ Preview');
+                const png = await this.compileTikzToPng(tikzCode);
+                this.showPreview(png, 'TikZ Preview');
             } catch (error) {
                 vscode.window.showErrorMessage(`TikZ compilation failed: ${error}`);
                 this.logger.error(`TikZ compilation error: ${error}`);
@@ -108,26 +143,56 @@ export class TikZPreview {
     }
 
     /**
-     * Compile TikZ code to SVG
+     * Compile TikZ code to PNG
      */
-    private async compileTikzToSvg(tikzCode: string): Promise<string> {
+    public async compileTikzToPng(tikzCode: string, sourceDocumentUri?: vscode.Uri): Promise<string> {
         // Check cache
         const hash = crypto.createHash('md5').update(tikzCode).digest('hex');
         const cached = this.tikzCache.get(hash);
         if (cached && Date.now() - cached.timestamp < 60000) {
-            return cached.svg;
+            return cached.png;
         }
 
         // Create temporary LaTeX file
         const tempBaseName = `tikz_${hash}`;
         const tempTexFile = path.join(this.tempDir, `${tempBaseName}.tex`);
         const tempPdfFile = path.join(this.tempDir, `${tempBaseName}.pdf`);
-        const tempSvgFile = path.join(this.tempDir, `${tempBaseName}.svg`);
+        const tempPngFile = path.join(this.tempDir, `${tempBaseName}.png`);
+
+        // Detect file references in TikZ code and copy them to temp directory
+        if (sourceDocumentUri) {
+            const sourceDir = path.dirname(sourceDocumentUri.fsPath);
+            const fileReferences = this.extractFileReferences(tikzCode);
+            
+            for (const fileRef of fileReferences) {
+                const sourcePath = path.resolve(sourceDir, fileRef);
+                const destPath = path.join(this.tempDir, path.basename(fileRef));
+                
+                if (fs.existsSync(sourcePath) && !fs.existsSync(destPath)) {
+                    try {
+                        fs.copyFileSync(sourcePath, destPath);
+                        this.logger.info(`Copied referenced file: ${fileRef}`);
+                    } catch (error) {
+                        this.logger.warn(`Failed to copy file ${fileRef}: ${error}`);
+                    }
+                }
+            }
+        }
+
+        // Detect if code uses pgfplots
+        const usesPgfplots = /\\(addplot|begin\{axis\}|pgfplotstable)/.test(tikzCode);
+        
+        // Detect if code uses circuitikz
+        const usesCircuitikz = /to\[(battery|resistor|capacitor|inductor|voltage|current|short|open|lamp|diode|led|transistor|op amp|european|american)/i.test(tikzCode) || 
+                               /\\(ctikzset|circuitikz)/.test(tikzCode) ||
+                               /\\begin\{circuitikz\}/.test(tikzCode);
 
         // Wrap TikZ code in standalone document
         const latexDoc = `\\documentclass[tikz,border=2pt]{standalone}
 \\usepackage{tikz}
 \\usetikzlibrary{arrows,shapes,positioning,calc,decorations}
+${usesPgfplots ? '\\usepackage{pgfplots}\n\\pgfplotsset{compat=newest}' : ''}
+${usesCircuitikz ? '\\usepackage{circuitikz}' : ''}
 \\begin{document}
 ${tikzCode}
 \\end{document}`;
@@ -135,40 +200,37 @@ ${tikzCode}
         fs.writeFileSync(tempTexFile, latexDoc);
 
         try {
-            // Compile to PDF
-            const compileCmd = `pdflatex -interaction=nonstopmode -output-directory="${this.tempDir}" "${tempTexFile}"`;
-            await execAsync(compileCmd, { cwd: this.tempDir });
+            // Compile to PDF using build system
+            if (this.buildSystem) {
+                const tempUri = vscode.Uri.file(tempTexFile);
+                const result = await this.buildSystem.build(tempUri);
+                if (!result.success || !result.pdfPath) {
+                    throw new Error(`PDF compilation failed: ${result.output}`);
+                }
+                // Copy PDF to expected location if needed
+                if (result.pdfPath !== tempPdfFile && fs.existsSync(result.pdfPath)) {
+                    fs.copyFileSync(result.pdfPath, tempPdfFile);
+                }
+            } else {
+                // Fallback to direct pdflatex call if build system not available
+                const compileCmd = `pdflatex -interaction=nonstopmode -output-directory="${this.tempDir}" "${tempTexFile}"`;
+                await execAsync(compileCmd, { cwd: this.tempDir });
+            }
 
             if (!fs.existsSync(tempPdfFile)) {
-                throw new Error('PDF compilation failed');
+                throw new Error('PDF compilation failed - PDF file not found');
             }
 
-            // Convert PDF to SVG using pdf2svg or dvisvgm
-            try {
-                await execAsync(`pdf2svg "${tempPdfFile}" "${tempSvgFile}"`);
-            } catch {
-                // Fallback to dvisvgm if pdf2svg not available
-                try {
-                    await execAsync(`dvisvgm --pdf "${tempPdfFile}" -o "${tempSvgFile}"`);
-                } catch {
-                    throw new Error('Neither pdf2svg nor dvisvgm found. Please install one of them for TikZ preview.');
-                }
-            }
-
-            if (!fs.existsSync(tempSvgFile)) {
-                throw new Error('SVG conversion failed');
-            }
-
-            // Read SVG content
-            const svg = fs.readFileSync(tempSvgFile, 'utf-8');
+            // Convert PDF to PNG using webview rendering
+            const pngBase64 = await this.renderPdfToImage(tempPdfFile);
 
             // Cache result
-            this.tikzCache.set(hash, { svg, timestamp: Date.now() });
+            this.tikzCache.set(hash, { png: pngBase64, timestamp: Date.now() });
 
             // Cleanup temporary files
             this.cleanupTempFiles(tempBaseName);
 
-            return svg;
+            return pngBase64;
         } catch (error) {
             // Cleanup on error
             this.cleanupTempFiles(tempBaseName);
@@ -177,10 +239,202 @@ ${tikzCode}
     }
 
     /**
+     * Render PDF to PNG image using webview + html2canvas
+     */
+    private async renderPdfToImage(pdfPath: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            // Store the currently active editor to restore focus later
+            const activeEditor = vscode.window.activeTextEditor;
+
+            // Create a hidden webview panel for rendering
+            this.renderingPanel = vscode.window.createWebviewPanel(
+                'tikzRenderer',
+                'Rendering...',
+                { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
+                {
+                    enableScripts: true,
+                    retainContextWhenHidden: false
+                }
+            );
+
+            // Read PDF as base64
+            const pdfData = fs.readFileSync(pdfPath);
+            const pdfBase64 = pdfData.toString('base64');
+
+            // Set up message handler
+            this.renderingPanel.webview.onDidReceiveMessage(
+                async (message) => {
+                    if (message.type === 'imageRendered') {
+                        try {
+                            // Get base64 image data (remove data:image/png;base64, prefix)
+                            const base64Data = message.data.replace(/^data:image\/png;base64,/, '');
+                            
+                            // Resize with smart sizing: 200px height, but limit width to 300px
+                            const buffer = Buffer.from(base64Data, 'base64');
+                            const image = await Jimp.read(buffer);
+                            
+                            // First resize to 200px height
+                            const heightResized = image.clone();
+                            await heightResized.resize({ h: 200 });
+                            
+                            // Check if width exceeds 300px
+                            if (heightResized.width > 300) {
+                                // Width is too large, resize by width instead
+                                await image.resize({ w: 300 });
+                            } else {
+                                // Height-based resize is fine
+                                image.bitmap = heightResized.bitmap;
+                            }
+                            
+                            // Convert back to base64
+                            const resizedBase64 = await image.getBase64('image/png');
+                            const finalBase64 = resizedBase64.replace(/^data:image\/png;base64,/, '');
+
+                            // Close rendering panel
+                            this.renderingPanel?.dispose();
+                            this.renderingPanel = undefined;
+
+                            // Restore focus to original editor
+                            if (activeEditor) {
+                                await vscode.window.showTextDocument(activeEditor.document, activeEditor.viewColumn);
+                            }
+
+                            resolve(finalBase64);
+                        } catch (error) {
+                            this.renderingPanel?.dispose();
+                            this.renderingPanel = undefined;
+                            reject(error);
+                        }
+                    } else if (message.type === 'error') {
+                        this.renderingPanel?.dispose();
+                        this.renderingPanel = undefined;
+                        reject(new Error(message.message));
+                    }
+                },
+                undefined,
+                this.context.subscriptions
+            );
+
+            // Set webview HTML
+            this.renderingPanel.webview.html = this.getRenderingHtml(pdfBase64);
+        });
+    }
+
+    /**
+     * Get HTML for PDF rendering webview
+     */
+    private getRenderingHtml(pdfBase64: string): string {
+        return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: white;
+        }
+        #pdf-container {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div id="pdf-container"></div>
+    <script>
+        const vscode = acquireVsCodeApi();
+        
+        // Configure PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        // Convert base64 to Uint8Array
+        const pdfData = atob('${pdfBase64}');
+        const pdfArray = new Uint8Array(pdfData.length);
+        for (let i = 0; i < pdfData.length; i++) {
+            pdfArray[i] = pdfData.charCodeAt(i);
+        }
+        
+        // Load and render PDF
+        pdfjsLib.getDocument({ data: pdfArray }).promise.then(async (pdf) => {
+            try {
+                const page = await pdf.getPage(1);
+                const viewport = page.getViewport({ scale: 2.0 });
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                const context = canvas.getContext('2d');
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                
+                document.getElementById('pdf-container').appendChild(canvas);
+                
+                // Wait a bit for rendering to complete
+                setTimeout(async () => {
+                    try {
+                        // Capture the rendered PDF as image
+                        const captureCanvas = await html2canvas(document.getElementById('pdf-container'), {
+                            backgroundColor: '#ffffff',
+                            scale: 1
+                        });
+                        
+                        const imageData = captureCanvas.toDataURL('image/png');
+                        vscode.postMessage({ type: 'imageRendered', data: imageData });
+                    } catch (error) {
+                        vscode.postMessage({ type: 'error', message: 'Failed to capture image: ' + error.message });
+                    }
+                }, 500);
+            } catch (error) {
+                vscode.postMessage({ type: 'error', message: 'Failed to render PDF: ' + error.message });
+            }
+        }).catch((error) => {
+            vscode.postMessage({ type: 'error', message: 'Failed to load PDF: ' + error.message });
+        });
+    </script>
+</body>
+</html>`;
+    }
+
+    /**
+     * Extract file references from TikZ code (e.g., data files in pgfplots)
+     */
+    private extractFileReferences(tikzCode: string): string[] {
+        const files: string[] = [];
+        
+        // Match: table[...]{filename} or table{filename}
+        const tableRegex = /table(?:\[[^\]]*\])?\s*\{([^}]+)\}/g;
+        let match;
+        while ((match = tableRegex.exec(tikzCode)) !== null) {
+            const filename = match[1].trim();
+            // Exclude inline data (starts with newline or contains \\)
+            if (!filename.startsWith('\n') && !filename.includes('\\\\')) {
+                files.push(filename);
+            }
+        }
+        
+        // Match: \addplot[...] file{filename}
+        const fileRegex = /\\addplot(?:\[[^\]]*\])?\s+file\s*\{([^}]+)\}/g;
+        while ((match = fileRegex.exec(tikzCode)) !== null) {
+            files.push(match[1].trim());
+        }
+        
+        // Match: \pgfplotstableread{filename}
+        const pgfplotstableRegex = /\\pgfplotstableread(?:\[[^\]]*\])?\s*\{([^}]+)\}/g;
+        while ((match = pgfplotstableRegex.exec(tikzCode)) !== null) {
+            files.push(match[1].trim());
+        }
+        
+        return [...new Set(files)]; // Remove duplicates
+    }
+
+    /**
      * Cleanup temporary files
      */
     private cleanupTempFiles(baseName: string): void {
-        const extensions = ['.tex', '.pdf', '.svg', '.aux', '.log'];
+        const extensions = ['.tex', '.pdf', '.png', '.aux', '.log'];
         for (const ext of extensions) {
             const file = path.join(this.tempDir, `${baseName}${ext}`);
             if (fs.existsSync(file)) {
@@ -194,12 +448,12 @@ ${tikzCode}
     }
 
     /**
-     * Show SVG preview in webview
+     * Show PNG preview in webview panel
      */
-    private showPreview(svgContent: string, title: string): void {
+    private showPreview(pngBase64: string, title: string): void {
         if (this.previewPanel) {
             this.previewPanel.title = title;
-            this.previewPanel.webview.html = this.getPreviewHtml(svgContent);
+            this.previewPanel.webview.html = this.getPreviewHtml(pngBase64);
             this.previewPanel.reveal(vscode.ViewColumn.Beside);
         } else {
             this.previewPanel = vscode.window.createWebviewPanel(
@@ -212,7 +466,7 @@ ${tikzCode}
                 }
             );
 
-            this.previewPanel.webview.html = this.getPreviewHtml(svgContent);
+            this.previewPanel.webview.html = this.getPreviewHtml(pngBase64);
 
             this.previewPanel.onDidDispose(() => {
                 this.previewPanel = undefined;
@@ -221,9 +475,9 @@ ${tikzCode}
     }
 
     /**
-     * Get HTML for SVG preview
+     * Get HTML for PNG preview
      */
-    private getPreviewHtml(svgContent: string): string {
+    private getPreviewHtml(pngBase64: string): string {
         return `<!DOCTYPE html>
 <html>
 <head>
@@ -249,10 +503,6 @@ ${tikzCode}
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        svg {
-            display: block;
-            margin: 0 auto;
-        }
         .controls {
             position: fixed;
             top: 10px;
@@ -272,6 +522,13 @@ ${tikzCode}
         button:hover {
             background: var(--vscode-button-hoverBackground);
         }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            transition: transform 0.2s;
+        }
     </style>
 </head>
 <body>
@@ -281,21 +538,20 @@ ${tikzCode}
         <button onclick="reset()">Reset</button>
     </div>
     <div class="container" id="container">
-        ${svgContent}
+        <img id="preview-img" src="data:image/png;base64,${pngBase64}" alt="TikZ Preview" />
     </div>
     <script>
         let scale = 1;
-        const container = document.getElementById('container');
-        const svg = container.querySelector('svg');
+        const img = document.getElementById('preview-img');
         
         function zoom(factor) {
             scale *= factor;
-            svg.style.transform = \`scale(\${scale})\`;
+            img.style.transform = \`scale(\${scale})\`;
         }
         
         function reset() {
             scale = 1;
-            svg.style.transform = 'scale(1)';
+            img.style.transform = 'scale(1)';
         }
     </script>
 </body>
@@ -318,7 +574,7 @@ ${tikzCode}
         }
 
         const outputPath = await vscode.window.showSaveDialog({
-            filters: { 'PDF Files': ['pdf'], 'SVG Files': ['svg'] },
+            filters: { 'PDF Files': ['pdf'], 'PNG Files': ['png'] },
             defaultUri: vscode.Uri.file(path.join(
                 path.dirname(editor.document.uri.fsPath),
                 'tikz-output.pdf'
@@ -337,9 +593,10 @@ ${tikzCode}
             cancellable: false
         }, async () => {
             try {
-                if (ext === '.svg') {
-                    const svg = await this.compileTikzToSvg(tikzCode);
-                    fs.writeFileSync(outputPath.fsPath, svg);
+                if (ext === '.png') {
+                    const pngBase64 = await this.compileTikzToPng(tikzCode);
+                    const pngBuffer = Buffer.from(pngBase64, 'base64');
+                    fs.writeFileSync(outputPath.fsPath, pngBuffer);
                 } else {
                     // Compile to PDF
                     const hash = crypto.createHash('md5').update(tikzCode).digest('hex');

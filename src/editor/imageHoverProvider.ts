@@ -90,12 +90,20 @@ export class ImageHoverProvider implements vscode.HoverProvider {
      */
     private async generateThumbnail(imagePath: string): Promise<string> {
         try {
-            // Read and resize image to max 200px height while maintaining aspect ratio
+            // Read and resize image with smart sizing: 200px height, but limit width to 300px
             const image = await Jimp.read(imagePath);
             
-            // Resize to 200px height (AUTO maintains aspect ratio)
-            if (image.height > 200) {
-                await image.resize({ h: 200 });
+            // First resize to 200px height
+            const heightResized = image.clone();
+            await heightResized.resize({ h: 200 });
+            
+            // Check if width exceeds 300px
+            if (heightResized.width > 300) {
+                // Width is too large, resize by width instead
+                await image.resize({ w: 300 });
+            } else {
+                // Height-based resize is fine
+                image.bitmap = heightResized.bitmap;
             }
             
             // Convert to JPEG with quality 80

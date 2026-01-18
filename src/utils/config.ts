@@ -52,6 +52,11 @@ export class Config {
         return this.config.get<'never' | 'onError' | 'always'>('showOutputChannel', 'onError');
     }
 
+    // Experimental features
+    getExperimentalTikZEditor(): boolean {
+        return this.config.get<boolean>('experimental.enableTikZEditor', false);
+    }
+
     // Generic get method
     get<T>(key: string): T | undefined;
     get<T>(key: string, defaultValue: T): T;

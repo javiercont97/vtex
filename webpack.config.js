@@ -28,8 +28,18 @@ const config = {
             loader: 'ts-loader'
           }
         ]
+      },
+      {
+        test: /\.wasm$/,
+        type: 'asset/resource',
+        generator: {
+          filename: '[name][ext]'
+        }
       }
     ]
+  },
+  experiments: {
+    asyncWebAssembly: true
   }
 };
 

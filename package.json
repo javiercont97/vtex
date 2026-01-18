@@ -371,6 +371,11 @@
           "type": "boolean",
           "default": true,
           "description": "Enable incremental compilation to speed up builds by only recompiling changed files"
+        },
+        "vtex.experimental.enableTikZEditor": {
+          "type": "boolean",
+          "default": false,
+          "description": "⚠️ EXPERIMENTAL: Enable the TikZ WYSIWYG visual editor (work in progress)"
         }
       }
     },
@@ -419,6 +424,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "html2canvas": "^1.4.1",
     "jimp": "^1.6.0",
     "vscode-languageclient": "^9.0.1"
   }
