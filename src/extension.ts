@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { BuildSystem } from './buildSystem/builder';
 import { PDFPreview } from './preview/pdfPreview';
 import { NativePDFPreview } from './preview/nativePdfPreview';
@@ -12,6 +13,23 @@ import { PackageManager } from './buildSystem/packageManager';
 import { ProjectManager } from './project/projectManager';
 import { BibliographyManager } from './bibliography/bibliographyManager';
 import { BibTeXEditor } from './bibliography/bibTeXEditor';
+// Phase 4 imports
+import { FigureManager } from './figures/figureManager';
+import { TikZPreview } from './figures/tikzPreview';
+import { PlotGenerator } from './figures/plotGenerator';
+import { EquationEditor } from './editor/equationEditor';
+import { GrammarChecker } from './editor/grammarChecker';
+import { TableEditor } from './editor/tableEditor';
+import { MacroWizard } from './editor/macroWizard';
+import { PerformanceOptimizer } from './buildSystem/performanceOptimizer';
+import { InlineDecorator } from './preview/inlineDecorator';
+import { EquationCodeLensProvider } from './preview/equationCodeLens';
+import { FigureCodeLensProvider } from './preview/figureCodeLens';
+import { EquationHoverProvider } from './editor/equationHoverProvider';
+import { EquationDecorationProvider } from './editor/equationDecorationProvider';
+import { ImageHoverProvider } from './editor/imageHoverProvider';
+import { ImageDecorationProvider } from './editor/imageDecorationProvider';
+import { FigureEditor } from './editor/figureEditor';
 
 let buildSystem: BuildSystem;
 let pdfPreview: PDFPreview;
@@ -23,6 +41,23 @@ let packageManager: PackageManager;
 let projectManager: ProjectManager;
 let bibliographyManager: BibliographyManager;
 let bibTeXEditor: BibTeXEditor;
+// Phase 4 managers
+let figureManager: FigureManager;
+let tikzPreview: TikZPreview;
+let plotGenerator: PlotGenerator;
+let equationEditor: EquationEditor;
+let grammarChecker: GrammarChecker;
+let tableEditor: TableEditor;
+let macroWizard: MacroWizard;
+let performanceOptimizer: PerformanceOptimizer;
+let inlineDecorator: InlineDecorator;
+let equationCodeLensProvider: EquationCodeLensProvider;
+let figureCodeLensProvider: FigureCodeLensProvider;
+let equationHoverProvider: EquationHoverProvider;
+let equationDecorationProvider: EquationDecorationProvider;
+let imageHoverProvider: ImageHoverProvider;
+let imageDecorationProvider: ImageDecorationProvider;
+let figureEditor: FigureEditor;
 let outputChannel: vscode.OutputChannel;
 let logger: Logger;
 
@@ -63,6 +98,67 @@ export async function activate(context: vscode.ExtensionContext) {
     projectManager = new ProjectManager(config, logger);
     bibliographyManager = new BibliographyManager(logger);
     bibTeXEditor = new BibTeXEditor(context, logger, bibliographyManager);
+
+    // Initialize Phase 4 features
+    figureManager = new FigureManager(context, logger);
+    tikzPreview = new TikZPreview(context, logger);
+    plotGenerator = new PlotGenerator(context, logger);
+    equationEditor = new EquationEditor(context, logger);
+    grammarChecker = new GrammarChecker(context, logger);
+    tableEditor = new TableEditor(context, logger);
+    macroWizard = new MacroWizard(context, logger);
+    performanceOptimizer = new PerformanceOptimizer(context, logger);
+    inlineDecorator = new InlineDecorator(context, logger);
+    equationCodeLensProvider = new EquationCodeLensProvider();
+    figureCodeLensProvider = new FigureCodeLensProvider();
+    equationHoverProvider = new EquationHoverProvider(context, logger);
+    equationDecorationProvider = new EquationDecorationProvider(context, logger);
+    imageHoverProvider = new ImageHoverProvider(context, logger);
+    figureEditor = new FigureEditor(context, logger);
+
+    // Register inline decorator commands
+    context.subscriptions.push(...inlineDecorator.registerCommands());
+    
+    // Register equation CodeLens provider
+    context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider(
+            { language: 'latex', scheme: 'file' },
+            equationCodeLensProvider
+        )
+    );
+
+    // Register figure CodeLens provider
+    context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider(
+            { language: 'latex', scheme: 'file' },
+            figureCodeLensProvider
+        )
+    );
+
+    // Register equation hover provider
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider(
+            { language: 'latex', scheme: 'file' },
+            equationHoverProvider
+        )
+    );
+
+    // Register image hover provider
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider(
+            { language: 'latex', scheme: 'file' },
+            imageHoverProvider
+        )
+    );
+
+    // Register equation decoration provider (gutter icons)
+    context.subscriptions.push(equationDecorationProvider);
+
+    // Initialize image decoration provider
+    imageDecorationProvider = new ImageDecorationProvider(context);
+    context.subscriptions.push(imageDecorationProvider);
+
+    logger.info('Phase 4 features initialized');
 
     // Initialize texlab installer and prompt if needed (non-blocking)
     const texlabInstaller = new TexlabInstaller(context);
@@ -410,6 +506,196 @@ function registerCommands(context: vscode.ExtensionContext) {
             '{' // Trigger character
         )
     );
+
+    // Phase 4: Figure Management
+    context.subscriptions.push(...figureManager.registerCommands());
+
+    // Phase 4: TikZ Preview
+    context.subscriptions.push(...tikzPreview.registerCommands());
+
+    // Phase 4: Plot Generator
+    context.subscriptions.push(...plotGenerator.registerCommands());
+
+    // Phase 4: Equation Editor
+    context.subscriptions.push(...equationEditor.registerCommands());
+
+    // Phase 4: Figure Editor
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vtex.openFigureEditor', async (uri?: vscode.Uri, range?: vscode.Range) => {
+            if (uri && range) {
+                // Extract figure properties from the range
+                const document = await vscode.workspace.openTextDocument(uri);
+                const figureText = document.getText(range);
+                
+                // Parse figure properties
+                const imageMatch = figureText.match(/\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}/);
+                const captionMatch = figureText.match(/\\caption\{([^}]*)\}/);
+                const labelMatch = figureText.match(/\\label\{([^}]*)\}/);
+                const widthMatch = figureText.match(/\[.*width=([^,\]]+).*\]/);
+                
+                const figureData = {
+                    imagePath: imageMatch ? imageMatch[1] : '',
+                    width: widthMatch ? widthMatch[1] : '',
+                    caption: captionMatch ? captionMatch[1] : '',
+                    label: labelMatch ? labelMatch[1] : ''
+                };
+                
+                figureEditor.openEditor(figureData, range);
+            } else {
+                figureEditor.openEditor();
+            }
+        })
+    );
+
+    // Phase 4: Figure CodeLens commands
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vtex.editFigureCaption', async (uri: vscode.Uri, range: vscode.Range) => {
+            const document = await vscode.workspace.openTextDocument(uri);
+            const figureText = document.getText(range);
+            
+            // Extract current caption
+            const captionMatch = figureText.match(/\\caption\{([^}]*)\}/);
+            const currentCaption = captionMatch ? captionMatch[1] : '';
+            
+            const newCaption = await vscode.window.showInputBox({
+                prompt: 'Enter new caption',
+                value: currentCaption,
+                placeHolder: 'Figure caption'
+            });
+            
+            if (newCaption !== undefined) {
+                const editor = await vscode.window.showTextDocument(document);
+                await editor.edit(editBuilder => {
+                    if (captionMatch) {
+                        // Replace existing caption
+                        const captionStart = document.offsetAt(range.start) + figureText.indexOf(captionMatch[0]);
+                        const captionRange = new vscode.Range(
+                            document.positionAt(captionStart),
+                            document.positionAt(captionStart + captionMatch[0].length)
+                        );
+                        editBuilder.replace(captionRange, `\\caption{${newCaption}}`);
+                    } else {
+                        // Add caption before \end{figure}
+                        const endMatch = figureText.match(/\\end\{figure\}/);
+                        if (endMatch) {
+                            const insertPos = document.positionAt(
+                                document.offsetAt(range.start) + figureText.indexOf(endMatch[0])
+                            );
+                            editBuilder.insert(insertPos, `    \\caption{${newCaption}}\n`);
+                        }
+                    }
+                });
+            }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vtex.changeImagePath', async (uri: vscode.Uri, range: vscode.Range) => {
+            const document = await vscode.workspace.openTextDocument(uri);
+            const text = document.getText(range);
+            
+            // Browse for image
+            const fileUris = await vscode.window.showOpenDialog({
+                canSelectFiles: true,
+                canSelectFolders: false,
+                canSelectMany: false,
+                filters: {
+                    'Images': ['png', 'jpg', 'jpeg', 'pdf', 'eps', 'svg']
+                },
+                title: 'Select image file'
+            });
+            
+            if (fileUris && fileUris.length > 0) {
+                const imagePath = fileUris[0].fsPath;
+                const docPath = path.dirname(uri.fsPath);
+                const relativePath = path.relative(docPath, imagePath).replace(/\\/g, '/');
+                
+                const editor = await vscode.window.showTextDocument(document);
+                await editor.edit(editBuilder => {
+                    // Find the \includegraphics command and its path
+                    const pathMatch = text.match(/\\includegraphics(\[[^\]]*\])?\{([^}]+)\}/);
+                    if (pathMatch) {
+                        const fullMatch = pathMatch[0];
+                        const options = pathMatch[1] || '';
+                        const oldPath = pathMatch[2];
+                        
+                        // Replace only the path inside \includegraphics
+                        const newCommand = `\\includegraphics${options}{${relativePath}}`;
+                        
+                        // Find the position of \includegraphics in the range
+                        const startOffset = text.indexOf(fullMatch);
+                        const matchStart = document.offsetAt(range.start) + startOffset;
+                        const matchEnd = matchStart + fullMatch.length;
+                        
+                        const replaceRange = new vscode.Range(
+                            document.positionAt(matchStart),
+                            document.positionAt(matchEnd)
+                        );
+                        
+                        editBuilder.replace(replaceRange, newCommand);
+                    }
+                });
+            }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vtex.previewTikzInFigure', async (uri: vscode.Uri, range: vscode.Range) => {
+            const document = await vscode.workspace.openTextDocument(uri);
+            const figureText = document.getText(range);
+            
+            // Extract TikZ code
+            const tikzMatch = figureText.match(/\\begin\{tikzpicture\}[\s\S]*?\\end\{tikzpicture\}/);
+            if (tikzMatch) {
+                // Use TikZ preview with the extracted code
+                await vscode.commands.executeCommand('vtex.previewTikz');
+            }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vtex.previewTikzStandalone', async (uri: vscode.Uri, range: vscode.Range) => {
+            await vscode.commands.executeCommand('vtex.previewTikz');
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vtex.editTikz', async (uri: vscode.Uri, range: vscode.Range) => {
+            vscode.window.showInformationMessage('TikZ editor coming soon! For now, use Preview TikZ to see your changes.');
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vtex.wrapInFigure', async (uri: vscode.Uri, range: vscode.Range) => {
+            const document = await vscode.workspace.openTextDocument(uri);
+            const content = document.getText(range);
+            
+            const position = await vscode.window.showQuickPick(['h', 't', 'b', 'p', 'H'], {
+                placeHolder: 'Select figure position (h=here, t=top, b=bottom, p=page, H=exactly here)'
+            });
+            
+            const wrappedContent = `\\begin{figure}[${position || 'h'}]\n    \\centering\n    ${content}\n    \\caption{}\n    \\label{fig:}\n\\end{figure}`;
+            
+            const editor = await vscode.window.showTextDocument(document);
+            await editor.edit(editBuilder => {
+                editBuilder.replace(range, wrappedContent);
+            });
+        })
+    );
+
+    // Phase 4: Grammar Checker
+    context.subscriptions.push(...grammarChecker.registerCommands());
+
+    // Phase 4: Table Editor
+    context.subscriptions.push(...tableEditor.registerCommands());
+
+    // Phase 4: Macro Wizard
+    context.subscriptions.push(...macroWizard.registerCommands());
+
+    // Phase 4: Performance Optimizer
+    context.subscriptions.push(...performanceOptimizer.registerCommands());
+
+    logger.info('Phase 4 commands registered');
 }
 
 function setupAutoBuild(context: vscode.ExtensionContext, config: Config) {
