@@ -32,6 +32,10 @@ import { ImageDecorationProvider } from './editor/imageDecorationProvider';
 import { FigureEditor } from './editor/figureEditor';
 import { TikZEditor } from './editor/tikzEditor';
 import { TikZHoverProvider } from './editor/tikzHoverProvider';
+// Table editor imports
+import { TableHoverProvider } from './editor/tableHoverProvider';
+import { TableCodeLensProvider } from './preview/tableCodeLens';
+import { TablePreview } from './figures/tablePreview';
 
 let buildSystem: BuildSystem;
 let pdfPreview: PDFPreview;
@@ -62,6 +66,10 @@ let imageDecorationProvider: ImageDecorationProvider;
 let figureEditor: FigureEditor;
 let tikzEditor: TikZEditor;
 let tikzHoverProvider: TikZHoverProvider;
+// Table editor instances
+let tableHoverProvider: TableHoverProvider;
+let tableCodeLensProvider: TableCodeLensProvider;
+let tablePreview: TablePreview;
 let outputChannel: vscode.OutputChannel;
 let logger: Logger;
 
@@ -122,6 +130,13 @@ export async function activate(context: vscode.ExtensionContext) {
     figureEditor = new FigureEditor(context, logger);
     tikzHoverProvider = new TikZHoverProvider(context, tikzPreview, logger);
     
+    // Initialize table editor components
+    tablePreview = new TablePreview(context, logger);
+    tablePreview.setBuildSystem(buildSystem);
+    tableHoverProvider = new TableHoverProvider(context, tablePreview, logger);
+    tableCodeLensProvider = new TableCodeLensProvider(logger);
+    tableEditor.setTablePreview(tablePreview);
+    
     // Initialize experimental features if enabled
     if (config.getExperimentalTikZEditor()) {
         tikzEditor = new TikZEditor(context, logger);
@@ -168,6 +183,22 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerHoverProvider(
             { language: 'latex', scheme: 'file' },
             tikzHoverProvider
+        )
+    );
+
+    // Register table hover provider
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider(
+            { language: 'latex', scheme: 'file' },
+            tableHoverProvider
+        )
+    );
+
+    // Register table CodeLens provider
+    context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider(
+            { language: 'latex', scheme: 'file' },
+            tableCodeLensProvider
         )
     );
 
