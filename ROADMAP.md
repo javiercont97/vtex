@@ -164,13 +164,34 @@ All features implemented! Figure management with inline previews, TikZ/plot prev
 
 ---
 
-## Phase 5: Technical Debt & Improvements (Future)
-**Goal**: Production-ready quality and maintainability
+## Phase 5: Release & Automation (Next Steps)
+**Goal**: Public release and automated delivery
+
+### Features
+- [ ] CI/CD pipeline
+  - [ ] GitHub Actions for build and test
+  - [ ] Automated release packaging
+  - [ ] Verification of VSIX package
+- [ ] Marketplace Publication
+  - [ ] Publish to Visual Studio Code Marketplace
+  - [ ] Publish to Open VSX Registry
+- [ ] Documentation refinement
+  - [ ] Polishing README.md for public release
+  - [ ] Creating user guide/wiki
+
+---
+
+## Phase 6: Technical Debt & Stability
+**Goal**: Production-ready robustness and maintainability
 
 ### Features
 - [ ] Comprehensive test suite
-- [ ] CI/CD pipeline
+  - [ ] Setup Jest/Mocha framework
+  - [ ] Unit tests for Parsers (BibTeX, Table, TikZ)
+  - [ ] Integration tests for Build System
 - [ ] Performance benchmarking
+  - [ ] Startup time analysis
+  - [ ] Large project compilation profiling
 - [ ] Memory optimization for large projects
 - [ ] Better error messages and user guidance
 - [ ] Accessibility features
@@ -179,7 +200,7 @@ All features implemented! Figure management with inline previews, TikZ/plot prev
 
 ---
 
-## Phase 6: Advanced Collaboration & Input (Future)
+## Phase 7: Advanced Collaboration & Input (Future)
 **Goal**: Enhanced collaboration and advanced input methods
 
 ### Features
@@ -195,9 +216,10 @@ All features implemented! Figure management with inline previews, TikZ/plot prev
 - **Phase 1**: Extension compiles and previews documents reliably ✅
 - **Phase 2**: Feature parity with basic LaTeX Workshop functionality ✅
 - **Phase 3**: User-reported quality of life improvements over LaTeX Workshop ✅
-- **Phase 4**: Advanced features for professional LaTeX workflows
-- **Phase 5**: Production-ready quality with comprehensive testing and optimizations
-- **Phase 6**: Enhanced collaboration and multi-language support
+- **Phase 4**: Advanced features for professional LaTeX workflows ✅
+- **Phase 5**: Successful publication to marketplaces with automated pipelines
+- **Phase 6**: High code coverage and stable performance metrics
+- **Phase 7**: Enhanced collaboration and multi-language support
 
 ---
 
@@ -262,6 +284,19 @@ All features implemented! Figure management with inline previews, TikZ/plot prev
 - Added performance optimizations with incremental compilation and build caching
 - Added partial build support for large multi-file projects
 - All Phase 4 features registered and tested
+
+### 2026-01-19: Project Status Review
+- Verified Phase 4 completion with fully functional Figure Manager, TikZ Editor, and Table Editor
+- Detailed technical debt in Phase 5: Test suite (Jest/Mocha), CI/CD, and Benchmarking
+- Confirmed Phase 3 pending items: Zotero/Mendeley integration and Pandoc export
+- Identified minor pending improvement: Grid display implementation in TikZ Editor (UI ready, rendering pending)
+
+### 2026-01-19: Roadmap Update (Splitting Phase 5)
+- Split original Phase 5 into "Release & Automation" (new Phase 5) and "Technical Debt & Stability" (Phase 6)
+- Decisions: Prioritize public release (VS Marketplace, Open VSX) over reduced technical debt
+- Rationale: Extension is functionally complete and usable; users should be able to install it while we work on stability/tests
+- New Phase 5 focus: CI/CD, Packaging, Publishing
+- New Phase 6 focus: Tests, Optimization, Telemetry
 
 ---
 
