@@ -27,6 +27,7 @@ import { EquationCodeLensProvider } from './preview/equationCodeLens';
 import { FigureCodeLensProvider } from './preview/figureCodeLens';
 import { EquationHoverProvider } from './editor/equationHoverProvider';
 import { EquationDecorationProvider } from './editor/equationDecorationProvider';
+import { TableDecorationProvider } from './editor/tableDecorationProvider';
 import { ImageHoverProvider } from './editor/imageHoverProvider';
 import { ImageDecorationProvider } from './editor/imageDecorationProvider';
 import { FigureEditor } from './editor/figureEditor';
@@ -61,6 +62,7 @@ let equationCodeLensProvider: EquationCodeLensProvider;
 let figureCodeLensProvider: FigureCodeLensProvider;
 let equationHoverProvider: EquationHoverProvider;
 let equationDecorationProvider: EquationDecorationProvider;
+let tableDecorationProvider: TableDecorationProvider;
 let imageHoverProvider: ImageHoverProvider;
 let imageDecorationProvider: ImageDecorationProvider;
 let figureEditor: FigureEditor;
@@ -126,6 +128,7 @@ export async function activate(context: vscode.ExtensionContext) {
     figureCodeLensProvider = new FigureCodeLensProvider();
     equationHoverProvider = new EquationHoverProvider(context, logger);
     equationDecorationProvider = new EquationDecorationProvider(context, logger);
+    tableDecorationProvider = new TableDecorationProvider(context);
     imageHoverProvider = new ImageHoverProvider(context, logger);
     figureEditor = new FigureEditor(context, logger);
     tikzHoverProvider = new TikZHoverProvider(context, tikzPreview, logger);
@@ -204,6 +207,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Register equation decoration provider (gutter icons)
     context.subscriptions.push(equationDecorationProvider);
+
+    // Register table decoration provider (gutter icons)
+    context.subscriptions.push(tableDecorationProvider);
 
     // Initialize image decoration provider
     imageDecorationProvider = new ImageDecorationProvider(context);
