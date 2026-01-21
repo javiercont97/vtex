@@ -5,7 +5,23 @@ All notable changes to the VTeX extension will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-01-21
+
+### Added
+- **Visual Editors**: Interactive editors for Tables, Equations, and Figures with live preview
+- **Project Templates**: Start new projects with professional templates (Article, Beamer, Book, Thesis, CV, Letter)
+- **Figure Management**: Inline image previews, TikZ live preview, and Plot generation wizard
+- **Smart Package Manager**: Automatic detection and one-click installation of missing LaTeX packages
+- **LSP Integration**: Full texlab integration for auto-completion, navigation, and refactoring
+- **Grammar Checking**: Integrated LanguageTool integration
+- **Bibliography Tools**: Visual BibTeX editor and citation picker
+- **Performance**: Incremental compilation and partial builds
+- **SyncTeX**: Bidirectional synchronization between editor and PDF
+
+### Changed
+- Improved PDF viewing experience with custom UI controls
+- Enhanced build system reliability
+- Updated documentation and command reference
 
 ## [0.1.0] - 2026-01-15
 

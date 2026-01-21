@@ -2,8 +2,16 @@
   "name": "vtex",
   "displayName": "VTeX - Modern LaTeX Editor",
   "description": "A modern, Overleaf-like LaTeX editing experience with hybrid build system support",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "publisher": "vtex",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/vtex"
+  },
+  "bugs": {
+    "url": "https://github.com/username/vtex/issues"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -417,6 +425,7 @@
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "@vscode/test-electron": "^2.3.8",
+    "@vscode/vsce": "^3.7.1",
     "eslint": "^8.56.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.3.3",

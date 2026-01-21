@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - run: npm ci
+    - run: npx vsce package
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: "*.vsix"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - run: npm ci
+    
+    # - name: Publish to VS Code Marketplace
+    #   run: npx vsce publish -p ${{ secrets.VSCE_PAT }}
+      
+    # - name: Publish to Open VSX Registry
+    #   run: npx ovsx publish -p ${{ secrets.OVSX_PAT }}

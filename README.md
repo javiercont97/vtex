@@ -2,13 +2,14 @@
 
 A modern, Overleaf-like LaTeX editing experience for VS Code with hybrid build system, intelligent project management, and comprehensive bibliography tools.
 
-## ✨ What's New in Phase 3
+## ✨ What's New
 
+- 📊 **Visual Editors**: Interactive editors for Tables, Equations, and Figures with live preview
 - 🎨 **Project Templates**: Start new projects with professional templates (Article, Beamer, Book, Thesis, CV, Letter)
+- 🖼️ **Figure Management**: Inline image previews, TikZ live preview, and Plot generation wizard
 - 📦 **Smart Package Manager**: Automatic detection and one-click installation of missing LaTeX packages
-- 📁 **Multi-File Projects**: Intelligent root file detection and project structure analysis
-- 📚 **Bibliography Management**: Citation picker, auto-completion, and BibTeX parsing
-- 🔍 **Enhanced PDF Preview**: Zoom controls, keyboard shortcuts, and bidirectional SyncTeX
+- ✍️ **Grammar Checking**: Integrated LanguageTool support for grammar and style
+- 🚀 **Performance**: Incremental compilation and partial builds for large projects
 
 ## Features
 
@@ -30,7 +31,7 @@ A modern, Overleaf-like LaTeX editing experience for VS Code with hybrid build s
 - **Hover Documentation**: Math preview and command documentation
 - **Workspace Symbols**: Quick navigation to sections and labels
 
-### ✅ Phase 3 - Quality of Life (80% Complete)
+### ✅ Phase 3 - Quality of Life (Complete)
 - **Project Templates**: 6 professional templates ready to use
   - Article, Beamer Presentation, Book, Thesis, CV, Letter
   - Multi-file structure with automatic setup
@@ -43,15 +44,27 @@ A modern, Overleaf-like LaTeX editing experience for VS Code with hybrid build s
   - Recursive file inclusion analysis
   - Project structure analyzer
 - **Bibliography Tools**: Complete citation workflow
-  - BibTeX file parsing and validation
+  - BibTeX GUI editor
   - Citation picker with search
-  - Auto-completion after `\cite{`
-  - Multi-file .bib support
-- **Enhanced Preview**: Professional PDF viewing
-  - Zoom in/out/fit/reset controls
-  - Page navigation and jumping
-  - Keyboard shortcuts
-  - Bidirectional SyncTeX
+  - Auto-completion for citations
+  - BibTeX file parsing and validation
+
+### ✅ Phase 4 - Advanced Features (Complete)
+- **Figure Management**: 
+  - Inline image thumbnails in editor
+  - Visual wizard for inserting figures
+  - Plot generator for 2D/3D plots
+- **TikZ Editor**: 
+  - Live preview for TikZ pictures
+  - Template library
+  - Export to SVG/PDF
+- **Visual Editors**:
+  - **Table Editor**: Spreadsheet-like interface for editing LaTeX tables
+  - **Equation Editor**: Visual math editor with real-time preview
+- **Productivity Tools**:
+  - **Grammar Checker**: LanguageTool integration
+  - **Macro Wizard**: GUI for creating custom commands
+  - **Performance**: Incremental builds and caching for large projects
 
 ## Requirements
 
@@ -66,14 +79,16 @@ A modern, Overleaf-like LaTeX editing experience for VS Code with hybrid build s
 
 ## Installation
 
+### From Marketplace
+1. Open VS Code Extensions view (`Ctrl+Shift+X`)
+2. Search for "VTeX"
+3. Click Install
+
 ### From Source (Development)
 1. Clone this repository
 2. Run `npm install` to install dependencies
 3. Run `npm run compile` to build
 4. Press F5 in VS Code to launch the extension in a new window
-
-### From VSIX (Coming Soon)
-- Install from VS Code Marketplace (not yet published)
 
 ## Quick Start
 
@@ -214,12 +229,8 @@ See [ROADMAP.md](ROADMAP.md) for detailed development plans.
 - Forward/inverse search (SyncTeX)
 - Document outline and structure view
 
-### Future (Phase 3+)
-- Project templates (article, book, beamer, thesis)
-- Automatic package installation
-- Bibliography management
-- Advanced split-pane preview
-- And much more!
+### Other Commands
+See the full list of commands in the command palette by typing `VTeX`.
 
 ## Why VTeX?
 
