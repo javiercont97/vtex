@@ -332,7 +332,7 @@ export class TikZEditor {
      */
     private async compilePreview(code: string) {
         try {
-            if (!this.panel) return;
+            if (!this.panel) {return;}
             
             // Create a temporary compilation using direct LaTeX compilation
             // We'll reuse the TikZ compilation logic but inline here
@@ -412,7 +412,7 @@ ${code}
      * Insert or update TikZ code in document
      */
     private async insertTikZ(code: string, isUpdate: boolean) {
-        if (this.isUpdating) return;
+        if (this.isUpdating) {return;}
         this.isUpdating = true;
 
         try {

@@ -3,61 +3,26 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as https from 'https';
 import * as child_process from 'child_process';
+import AdmZip = require('adm-zip');
+import { TexlabManager } from './texlabManager';
+import { Logger } from '../utils/logger';
 
 export class TexlabInstaller {
-    private readonly extensionPath: string;
-    private readonly binPath: string;
-    private readonly texlabPath: string;
+    private manager: TexlabManager;
 
-    constructor(private context: vscode.ExtensionContext) {
-        this.extensionPath = context.extensionPath;
-        this.binPath = path.join(this.extensionPath, 'bin');
-        this.texlabPath = path.join(this.binPath, 'texlab');
+    constructor(
+        private context: vscode.ExtensionContext,
+        private logger?: Logger
+    ) {
+        this.manager = new TexlabManager(context, logger);
     }
 
-    /**
-     * Check if texlab is installed (either in PATH or in extension bin)
-     */
-    public isInstalled(): boolean {
-        // Check in extension bin directory
-        if (fs.existsSync(this.texlabPath)) {
-            return true;
-        }
-
-        // Check if texlab is in PATH
-        try {
-            child_process.execSync('texlab --version', { timeout: 5000 });
-            return true;
-        } catch {
-            return false;
-        }
+    public async isInstalled(): Promise<boolean> {
+        return this.manager.isInstalled();
     }
 
-    /**
-     * Get the installed texlab version
-     */
-    public getInstalledVersion(): string | null {
-        try {
-            // Try extension bin first
-            if (fs.existsSync(this.texlabPath)) {
-                const output = child_process.execSync(`"${this.texlabPath}" --version`, { 
-                    timeout: 5000,
-                    encoding: 'utf8'
-                });
-                const match = output.match(/texlab (\d+\.\d+\.\d+)/);
-                return match ? match[1] : null;
-            }
-
-            // Try system texlab
-            const output = child_process.execSync('texlab --version', { 
-                timeout: 5000,
-                encoding: 'utf8'
-            });
-            const match = output.match(/texlab (\d+\.\d+\.\d+)/);
-            return match ? match[1] : null;
-        } catch (error) {
-            return null;
-        }
+    public async getInstalledVersion(): Promise<string | null> {
+        return this.manager.getInstalledVersion();
     }
 
     /**
@@ -88,7 +53,7 @@ export class TexlabInstaller {
      */
     public async installOrUpdate(): Promise<boolean> {
         try {
-            await vscode.window.withProgress({
+            return await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: "Installing texlab LSP server",
                 cancellable: false
@@ -102,59 +67,74 @@ export class TexlabInstaller {
 
                 progress.report({ message: `Downloading texlab v${latestVersion}...` });
 
-                // Create bin directory if it doesn't exist
-                if (!fs.existsSync(this.binPath)) {
-                    fs.mkdirSync(this.binPath, { recursive: true });
+                // Ensure global storage directory exists
+                const installDir = this.manager.getGlobalStoragePath();
+                if (!fs.existsSync(installDir)) {
+                    fs.mkdirSync(installDir, { recursive: true });
                 }
 
                 // Determine platform-specific download URL
                 const platform = process.platform as string;
                 let downloadUrl: string;
-                let extractedName = 'texlab';
+                const isWindows = platform === 'win32';
 
                 if (platform === 'linux') {
                     downloadUrl = `https://github.com/latex-lsp/texlab/releases/latest/download/texlab-x86_64-linux.tar.gz`;
                 } else if (platform === 'darwin') {
                     downloadUrl = `https://github.com/latex-lsp/texlab/releases/latest/download/texlab-x86_64-macos.tar.gz`;
-                } else if (platform === 'win32') {
+                } else if (isWindows) {
                     downloadUrl = `https://github.com/latex-lsp/texlab/releases/latest/download/texlab-x86_64-windows.zip`;
-                    extractedName = 'texlab.exe';
                 } else {
                     throw new Error(`Unsupported platform: ${platform}`);
                 }
 
                 // Download to temp location
-                const tempFile = path.join(this.binPath, 'texlab_download');
+                const tempFile = path.join(installDir, isWindows ? 'texlab_download.zip' : 'texlab_download.tar.gz');
+                
+                // Clean up previous temp file if exists
+                if (fs.existsSync(tempFile)) {
+                    fs.unlinkSync(tempFile);
+                }
+
                 await this.downloadFile(downloadUrl, tempFile);
 
                 progress.report({ message: "Extracting..." });
 
                 // Extract based on platform
-                if (platform === 'win32') {
-                    // For Windows, we'd need a zip extraction (skip for now, require manual install)
-                    throw new Error('Automatic installation on Windows not yet supported. Please install texlab manually.');
+                if (isWindows) {
+                    try {
+                        const zip = new AdmZip(tempFile);
+                        zip.extractAllTo(installDir, true);
+                    } catch (e) {
+                        throw new Error(`Failed to extract zip file: ${e}`);
+                    }
+                } else {
+                    // Unix-like systems: extract tar.gz
+                    await this.extractTarGz(tempFile, installDir);
                 }
-                
-                // Unix-like systems: extract tar.gz
-                await this.extractTarGz(tempFile, this.binPath);
-
-                // Make executable (Unix-like only)
-                fs.chmodSync(this.texlabPath, 0o755);
 
                 // Clean up temp file
                 if (fs.existsSync(tempFile)) {
                     fs.unlinkSync(tempFile);
                 }
 
+                // Make executable (Unix-like only)
+                if (!isWindows) {
+                    const binaryPath = this.manager.getDownloadTarget();
+                    if (fs.existsSync(binaryPath)) {
+                        fs.chmodSync(binaryPath, 0o755);
+                    }
+                }
+
+                this.logger?.info(`texlab installed successfully to: ${installDir}`);
                 progress.report({ message: "Installation complete!" });
+                return true;
             });
 
-            return true;
-
         } catch (error) {
-            vscode.window.showErrorMessage(
-                `Failed to install texlab: ${error instanceof Error ? error.message : String(error)}`
-            );
+            const errorMessage = `Failed to install texlab: ${error instanceof Error ? error.message : String(error)}`;
+            this.logger?.error(errorMessage);
+            vscode.window.showErrorMessage(errorMessage);
             return false;
         }
     }
@@ -197,7 +177,11 @@ export class TexlabInstaller {
             });
 
             file.on('error', (err) => {
-                fs.unlinkSync(destination);
+                // Ensure file is closed and removed on error
+                file.close();
+                if (fs.existsSync(destination)) {
+                    fs.unlinkSync(destination);
+                }
                 reject(err);
             });
         });
@@ -225,38 +209,42 @@ export class TexlabInstaller {
      * Prompt user to install texlab if not already installed
      */
     public async promptInstallIfNeeded(): Promise<void> {
-        if (this.isInstalled()) {
-            return;
-        }
-
-        const config = vscode.workspace.getConfiguration('vtex');
-        const lspEnabled = config.get<boolean>('lsp.enabled', true);
-        
-        if (!lspEnabled) {
-            return; // User has disabled LSP
-        }
-
-        const choice = await vscode.window.showInformationMessage(
-            'VTeX: texlab LSP server is not installed. Would you like to download it for enhanced editing features (auto-completion, diagnostics, etc.)?',
-            'Install',
-            'Not Now',
-            'Don\'t Ask Again'
-        );
-
-        if (choice === 'Install') {
-            const success = await this.installOrUpdate();
-            if (success) {
-                vscode.window.showInformationMessage(
-                    'texlab installed successfully! Please reload the window to activate LSP features.',
-                    'Reload Window'
-                ).then(action => {
-                    if (action === 'Reload Window') {
-                        vscode.commands.executeCommand('workbench.action.reloadWindow');
-                    }
-                });
+        try {
+            if (await this.isInstalled()) {
+                return;
             }
-        } else if (choice === 'Don\'t Ask Again') {
-            await config.update('lsp.enabled', false, vscode.ConfigurationTarget.Global);
+
+            const config = vscode.workspace.getConfiguration('vtex');
+            const lspEnabled = config.get<boolean>('lsp.enabled', true);
+            
+            if (!lspEnabled) {
+                return; // User has disabled LSP
+            }
+
+            const choice = await vscode.window.showInformationMessage(
+                'VTeX: texlab LSP server is not installed. Would you like to download it for enhanced editing features?',
+                'Install',
+                'Not Now',
+                'Don\'t Ask Again'
+            );
+
+            if (choice === 'Install') {
+                const success = await this.installOrUpdate();
+                if (success) {
+                    vscode.window.showInformationMessage(
+                        'texlab installed successfully! Please reload the window to activate LSP features.',
+                        'Reload Window'
+                    ).then(action => {
+                        if (action === 'Reload Window') {
+                            vscode.commands.executeCommand('workbench.action.reloadWindow');
+                        }
+                    });
+                }
+            } else if (choice === 'Don\'t Ask Again') {
+                await config.update('lsp.enabled', false, vscode.ConfigurationTarget.Global);
+            }
+        } catch (error) {
+            this.logger?.error(`Error in install prompt: ${error}`);
         }
     }
 }

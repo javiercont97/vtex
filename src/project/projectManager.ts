@@ -167,7 +167,7 @@ export class ProjectManager {
         let match;
 
         while ((match = includePattern.exec(content)) !== null) {
-            let includedFile = match[1].replace(/\.tex$/, '');
+            const includedFile = match[1].replace(/\.tex$/, '');
             
             // Resolve relative path
             const resolvedPath = path.resolve(currentDir, includedFile + '.tex');

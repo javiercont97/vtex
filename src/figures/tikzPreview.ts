@@ -123,7 +123,7 @@ export class TikZPreview {
         const endMatchesBefore = Array.from(beforeCursor.matchAll(/\\end\{tikzpicture\}/g));
         
         // Count nested environments
-        let depth = beginMatches.length - endMatchesBefore.length;
+        const depth = beginMatches.length - endMatchesBefore.length;
         if (depth <= 0) {
             return null; // Cursor is not inside a tikzpicture
         }

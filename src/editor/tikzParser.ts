@@ -243,7 +243,7 @@ export class TikZParser {
         
         for (const cmd of commands) {
             const trimmed = cmd.trim();
-            if (!trimmed) continue;
+            if (!trimmed) {continue;}
             
             try {
                 const node = this.parseCommand(trimmed);
@@ -270,10 +270,10 @@ export class TikZParser {
         for (let i = 0; i < content.length; i++) {
             const char = content[i];
             
-            if (char === '{') braceDepth++;
-            else if (char === '}') braceDepth--;
-            else if (char === '[') bracketDepth++;
-            else if (char === ']') bracketDepth--;
+            if (char === '{') {braceDepth++;}
+            else if (char === '}') {braceDepth--;}
+            else if (char === '[') {bracketDepth++;}
+            else if (char === ']') {bracketDepth--;}
             else if (char === ';' && braceDepth === 0 && bracketDepth === 0) {
                 commands.push(current.trim());
                 current = '';
@@ -405,7 +405,7 @@ export class TikZParser {
         
         // \coordinate (name) at (x,y);
         const match = cmd.match(/\\coordinate\s*\(([^)]+)\)\s*at\s*\(([^)]+)\)/);
-        if (!match) return null;
+        if (!match) {return null;}
         
         return {
             type: 'coordinate',
@@ -462,13 +462,13 @@ export class TikZParser {
         const options: TikZOptions = { raw: [] };
         const optionMatch = cmd.match(/\[([^\]]*)\]/);
         
-        if (!optionMatch) return options;
+        if (!optionMatch) {return options;}
         
         const optionStr = optionMatch[1];
         const parts = optionStr.split(',').map(s => s.trim());
         
         for (const part of parts) {
-            if (!part) continue;
+            if (!part) {continue;}
             
             // Key=value options
             if (part.includes('=')) {
@@ -665,7 +665,7 @@ export class TikZGenerator {
         
         // Otherwise reconstruct from parsed options
         for (const [key, value] of Object.entries(options)) {
-            if (key === 'raw') continue;
+            if (key === 'raw') {continue;}
             
             if (typeof value === 'boolean' && value) {
                 parts.push(key);

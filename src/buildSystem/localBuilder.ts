@@ -44,7 +44,7 @@ export class LocalBuilder implements IBuilder {
 
         try {
             let command: string;
-            let cwd = docDir;
+            const cwd = docDir;
 
             if (engine === 'latexmk') {
                 const options = this.config.getLatexmkOptions().join(' ');

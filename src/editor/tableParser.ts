@@ -169,11 +169,11 @@ export class TableParser {
      * Normalize environment name
      */
     private normalizeEnvironment(env: string): TableAST['environment'] {
-        if (env === 'tabular*' || env === 'tabular') return 'tabular';
-        if (env === 'tabularx') return 'tabularx';
-        if (env === 'longtable') return 'longtable';
-        if (env === 'array') return 'array';
-        if (env === 'tabu') return 'tabu';
+        if (env === 'tabular*' || env === 'tabular') {return 'tabular';}
+        if (env === 'tabularx') {return 'tabularx';}
+        if (env === 'longtable') {return 'longtable';}
+        if (env === 'array') {return 'array';}
+        if (env === 'tabu') {return 'tabu';}
         return 'tabular';
     }
 
@@ -253,8 +253,8 @@ export class TableParser {
                 let widthEnd = widthStart;
                 
                 while (widthEnd < spec.length && braceCount > 0) {
-                    if (spec[widthEnd] === '{') braceCount++;
-                    if (spec[widthEnd] === '}') braceCount--;
+                    if (spec[widthEnd] === '{') {braceCount++;}
+                    if (spec[widthEnd] === '}') {braceCount--;}
                     widthEnd++;
                 }
                 
@@ -275,8 +275,8 @@ export class TableParser {
                 let contentEnd = contentStart;
                 
                 while (contentEnd < spec.length && braceCount > 0) {
-                    if (spec[contentEnd] === '{') braceCount++;
-                    if (spec[contentEnd] === '}') braceCount--;
+                    if (spec[contentEnd] === '{') {braceCount++;}
+                    if (spec[contentEnd] === '}') {braceCount--;}
                     contentEnd++;
                 }
                 i = contentEnd;
@@ -449,9 +449,9 @@ export class TableParser {
             
             // Parse alignment from spec
             let alignment: 'l' | 'c' | 'r' | undefined;
-            if (spec.includes('l')) alignment = 'l';
-            else if (spec.includes('c')) alignment = 'c';
-            else if (spec.includes('r')) alignment = 'r';
+            if (spec.includes('l')) {alignment = 'l';}
+            else if (spec.includes('c')) {alignment = 'c';}
+            else if (spec.includes('r')) {alignment = 'r';}
             
             return {
                 content,

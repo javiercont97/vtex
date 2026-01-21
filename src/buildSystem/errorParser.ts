@@ -45,7 +45,7 @@ export class ErrorParser {
                 const [, pkg, message] = warningMatch;
                 
                 // Try to extract file and line number from warning
-                let file = 'unknown';
+                const file = 'unknown';
                 let lineNum = 0;
                 
                 // Some warnings include file info like: on input line 123
@@ -66,7 +66,7 @@ export class ErrorParser {
             if (line.includes('! LaTeX Error:') || line.includes('! Undefined control sequence')) {
                 // Extract file and line from previous lines
                 let file = 'unknown';
-                let lineNum = 0;
+                const lineNum = 0;
                 
                 for (let k = i - 1; k >= Math.max(0, i - 10); k--) {
                     const prevLine = lines[k];

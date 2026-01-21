@@ -38,7 +38,7 @@ class TableGrid {
                     colIndex++;
                 }
                 
-                if (colIndex >= this.columnSpec.length) break;
+                if (colIndex >= this.columnSpec.length) {break;}
                 
                 const colspan = cell.colspan || 1;
                 const rowspan = cell.rowspan || 1;
@@ -396,7 +396,7 @@ export class TableEditor {
      * Handle cell content update
      */
     private async handleCellUpdate(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { row, col, content } = message;
         if (row < this.currentGrid.cells.length && col < this.currentGrid.cells[row].length) {
@@ -416,7 +416,7 @@ export class TableEditor {
      * Handle insert row
      */
     private async handleInsertRow(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { index, position } = message;
         const insertIndex = position === 'above' ? index : index + 1;
@@ -451,7 +451,7 @@ export class TableEditor {
      * Handle delete row
      */
     private async handleDeleteRow(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { index } = message;
         if (this.currentGrid.cells.length <= 1) {
@@ -478,7 +478,7 @@ export class TableEditor {
      * Handle insert column
      */
     private async handleInsertColumn(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { index, position } = message;
         const insertIndex = position === 'left' ? index : index + 1;
@@ -513,7 +513,7 @@ export class TableEditor {
      * Handle delete column
      */
     private async handleDeleteColumn(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { index } = message;
         if (this.currentGrid.columnSpec.length <= 1) {
@@ -546,7 +546,7 @@ export class TableEditor {
      * Handle merge cells
      */
     private async handleMergeCells(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { startRow, startCol, endRow, endCol } = message;
         
@@ -571,7 +571,7 @@ export class TableEditor {
         // Mark other cells as spanned
         for (let r = startRow; r <= endRow; r++) {
             for (let c = startCol; c <= endCol; c++) {
-                if (r === startRow && c === startCol) continue;
+                if (r === startRow && c === startCol) {continue;}
                 this.currentGrid.cells[r][c] = {
                     content: '',
                     isSpanned: true,
@@ -597,7 +597,7 @@ export class TableEditor {
      * Handle split cell
      */
     private async handleSplitCell(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { row, col } = message;
         const cell = this.currentGrid.cells[row][col];
@@ -617,7 +617,7 @@ export class TableEditor {
         // Unmark spanned cells
         for (let r = row; r < row + rowspan; r++) {
             for (let c = col; c < col + colspan; c++) {
-                if (r === row && c === col) continue;
+                if (r === row && c === col) {continue;}
                 if (r < this.currentGrid.cells.length && c < this.currentGrid.cells[r].length) {
                     this.currentGrid.cells[r][c] = {
                         content: '',
@@ -644,17 +644,17 @@ export class TableEditor {
      * Handle change colspan
      */
     private async handleChangeColSpan(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { row, col, span } = message;
         const cell = this.currentGrid.cells[row]?.[col];
         
-        if (!cell || cell.isSpanned) return;
+        if (!cell || cell.isSpanned) {return;}
         
         const oldSpan = cell.colspan || 1;
         const newSpan = Math.max(1, Math.min(span, this.currentGrid.columnSpec.length - col));
         
-        if (newSpan === oldSpan) return;
+        if (newSpan === oldSpan) {return;}
         
         // Update cell colspan
         cell.colspan = newSpan > 1 ? newSpan : undefined;
@@ -692,17 +692,17 @@ export class TableEditor {
      * Handle change rowspan
      */
     private async handleChangeRowSpan(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { row, col, span } = message;
         const cell = this.currentGrid.cells[row]?.[col];
         
-        if (!cell || cell.isSpanned) return;
+        if (!cell || cell.isSpanned) {return;}
         
         const oldSpan = cell.rowspan || 1;
         const newSpan = Math.max(1, Math.min(span, this.currentGrid.cells.length - row));
         
-        if (newSpan === oldSpan) return;
+        if (newSpan === oldSpan) {return;}
         
         // Update cell rowspan
         cell.rowspan = newSpan > 1 ? newSpan : undefined;
@@ -743,12 +743,12 @@ export class TableEditor {
      * Handle change vertical alignment
      */
     private async handleChangeVerticalAlignment(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { row, column, alignment } = message;
         const cell = this.currentGrid.cells[row]?.[column];
         
-        if (!cell || cell.isSpanned) return;
+        if (!cell || cell.isSpanned) {return;}
         
         // Store vertical alignment in cell
         cell.verticalAlignment = alignment;
@@ -760,12 +760,12 @@ export class TableEditor {
      * Handle change alignment
      */
     private async handleChangeAlignment(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { row, column, alignment } = message;
         const cell = this.currentGrid.cells[row]?.[column];
         
-        if (!cell || cell.isSpanned) return;
+        if (!cell || cell.isSpanned) {return;}
         
         // Update cell alignment (not column spec)
         cell.alignment = alignment;
@@ -790,7 +790,7 @@ export class TableEditor {
      * Get row border information for visual feedback
      */
     private getRowBorders(): any[] {
-        if (!this.currentAST) return [];
+        if (!this.currentAST) {return [];}
         
         return this.currentAST.rows.map((row, rowIndex) => {
             const borders: any = {
@@ -986,7 +986,7 @@ export class TableEditor {
      * Handle toggle border
      */
     private async handleToggleBorder(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { border, enabled, row, col } = message;
         
@@ -1056,7 +1056,7 @@ export class TableEditor {
                 } else {
                     // Remove border from BOTH current row's rulesAbove AND previous row's rulesBelow
                     this.currentAST.rows[row].rulesAbove = this.currentAST.rows[row].rulesAbove.filter(r => {
-                        if (r.type === 'hline') return false;
+                        if (r.type === 'hline') {return false;}
                         if (r.type === 'cline' && r.columns) {
                             return !(r.columns[0] === cellStartCol && r.columns[1] === cellEndCol);
                         }
@@ -1066,7 +1066,7 @@ export class TableEditor {
                     // Also remove from previous row's rulesBelow
                     if (row > 0) {
                         this.currentAST.rows[row - 1].rulesBelow = this.currentAST.rows[row - 1].rulesBelow.filter(r => {
-                            if (r.type === 'hline') return false;
+                            if (r.type === 'hline') {return false;}
                             if (r.type === 'cline' && r.columns) {
                                 return !(r.columns[0] === cellStartCol && r.columns[1] === cellEndCol);
                             }
@@ -1110,7 +1110,7 @@ export class TableEditor {
                 } else {
                     // Remove border from BOTH current row's rulesBelow AND next row's rulesAbove
                     this.currentAST.rows[row].rulesBelow = this.currentAST.rows[row].rulesBelow.filter(r => {
-                        if (r.type === 'hline') return false;
+                        if (r.type === 'hline') {return false;}
                         if (r.type === 'cline' && r.columns) {
                             return !(r.columns[0] === cellStartCol && r.columns[1] === cellEndCol);
                         }
@@ -1120,7 +1120,7 @@ export class TableEditor {
                     // Also remove from next row's rulesAbove
                     if (row < this.currentAST.rows.length - 1) {
                         this.currentAST.rows[row + 1].rulesAbove = this.currentAST.rows[row + 1].rulesAbove.filter(r => {
-                            if (r.type === 'hline') return false;
+                            if (r.type === 'hline') {return false;}
                             if (r.type === 'cline' && r.columns) {
                                 return !(r.columns[0] === cellStartCol && r.columns[1] === cellEndCol);
                             }
@@ -1148,7 +1148,7 @@ export class TableEditor {
      * Handle set border preset
      */
     private async handleSetBorderPreset(message: any): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const { preset } = message;
         
@@ -1213,7 +1213,7 @@ export class TableEditor {
      * Handle update table environment wrapper
      */
     private async handleUpdateTableEnvironment(message: any): Promise<void> {
-        if (!this.currentAST) return;
+        if (!this.currentAST) {return;}
         
         this.currentAST.hasTableEnvironment = message.hasTableEnvironment;
         await this.updateSource(false);
@@ -1223,7 +1223,7 @@ export class TableEditor {
      * Handle update caption
      */
     private async handleUpdateCaption(message: any): Promise<void> {
-        if (!this.currentAST) return;
+        if (!this.currentAST) {return;}
         
         this.currentAST.caption = message.caption || undefined;
         await this.updateSource(false);
@@ -1233,7 +1233,7 @@ export class TableEditor {
      * Handle update caption position
      */
     private async handleUpdateCaptionPosition(message: any): Promise<void> {
-        if (!this.currentAST) return;
+        if (!this.currentAST) {return;}
         
         this.currentAST.captionPosition = message.position;
         await this.updateSource(false);
@@ -1243,7 +1243,7 @@ export class TableEditor {
      * Handle update label
      */
     private async handleUpdateLabel(message: any): Promise<void> {
-        if (!this.currentAST) return;
+        if (!this.currentAST) {return;}
         
         this.currentAST.label = message.label || undefined;
         await this.updateSource(false);
@@ -1253,7 +1253,7 @@ export class TableEditor {
      * Update source document
      */
     private async updateSource(isAutoUpdate: boolean): Promise<void> {
-        if (!this.currentGrid || !this.currentAST || this.isUpdating) return;
+        if (!this.currentGrid || !this.currentAST || this.isUpdating) {return;}
         
         this.isUpdating = true;
         
@@ -1300,7 +1300,7 @@ export class TableEditor {
      * Refresh table preview
      */
     private async refreshPreview(): Promise<void> {
-        if (!this.currentGrid || !this.currentAST || !this.panel) return;
+        if (!this.currentGrid || !this.currentAST || !this.panel) {return;}
         
         try {
             const ast = this.currentGrid.toAST(this.currentAST);
@@ -1325,7 +1325,7 @@ export class TableEditor {
      * Insert table to document
      */
     private async insertTableToDocument(isUpdate: boolean): Promise<void> {
-        if (!this.currentGrid || !this.currentAST) return;
+        if (!this.currentGrid || !this.currentAST) {return;}
         
         const ast = this.currentGrid.toAST(this.currentAST);
         const latex = this.generator.generate(ast);

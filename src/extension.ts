@@ -218,7 +218,7 @@ export async function activate(context: vscode.ExtensionContext) {
     logger.info('Phase 4 features initialized');
 
     // Initialize texlab installer and prompt if needed (non-blocking)
-    const texlabInstaller = new TexlabInstaller(context);
+    const texlabInstaller = new TexlabInstaller(context, logger);
     texlabInstaller.promptInstallIfNeeded().catch(error => {
         logger.error(`Failed to prompt texlab installation: ${error}`);
     });
@@ -230,7 +230,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     // Register custom editor for PDF files
-    context.subscriptions.push(
+    context.subscriptions.push( 
         vscode.window.registerCustomEditorProvider('vtex.pdfPreview', pdfPreview, {
             webviewOptions: {
                 retainContextWhenHidden: true
@@ -338,8 +338,8 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
     // Install/Update texlab command
     context.subscriptions.push(
         vscode.commands.registerCommand('vtex.installTexlab', async () => {
-            const installer = new TexlabInstaller(context);
-            const currentVersion = installer.getInstalledVersion();
+            const installer = new TexlabInstaller(context, logger);
+            const currentVersion = await installer.getInstalledVersion();
             
             let message = 'Install texlab LSP server?';
             if (currentVersion) {
@@ -353,20 +353,43 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
             );
             
             if (choice === 'Install') {
+                // Stop existing client if running to release file lock (Windows)
+                if (texlabClient && texlabClient.isActive()) {
+                    logger.info('Stopping texlab client before update...');
+                    await texlabClient.stop();
+                }
+
                 const success = await installer.installOrUpdate();
+                
                 if (success) {
                     const action = await vscode.window.showInformationMessage(
                         'texlab installed successfully! Reload window to activate?',
                         'Reload',
+                        'Restart Server',
                         'Later'
                     );
+                    
                     if (action === 'Reload') {
                         vscode.commands.executeCommand('workbench.action.reloadWindow');
+                    } else if (action === 'Restart Server') {
+                        // restart client
+                        await texlabClient.start();
+                    } else {
+                        // Even if user says later, we should try to restart if we stopped it
+                        if (!texlabClient.isActive()) {
+                             await texlabClient.start();
+                        }
+                    }
+                } else {
+                    // If failed, try to restart old one
+                    if (!texlabClient.isActive()) {
+                        await texlabClient.start();
                     }
                 }
             }
         })
     );
+
 
     // Forward search (editor → PDF) with SyncTeX
     context.subscriptions.push(
