@@ -1,16 +1,17 @@
 {
   "name": "vtex",
+  "icon": "logo.png",
   "displayName": "VTeX - Modern LaTeX Editor",
   "description": "A modern, Overleaf-like LaTeX editing experience with hybrid build system support",
-  "version": "1.0.0",
-  "publisher": "vtex",
+  "version": "1.0.1",
+  "publisher": "javiercont97",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/username/vtex"
+    "url": "https://github.com/javiercont97/vtex"
   },
   "bugs": {
-    "url": "https://github.com/username/vtex/issues"
+    "url": "https://github.com/javiercont97/vtex/issues"
   },
   "engines": {
     "vscode": "^1.85.0"
