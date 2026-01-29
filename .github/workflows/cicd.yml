@@ -55,12 +55,12 @@ jobs:
     
     - uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22
         
     - name: Download Artifact
       uses: actions/download-artifact@v4
       with:
-        name: intex-extension-20.x
+        name: intex-extension-22.x
         
     - name: Create Release
       uses: softprops/action-gh-release@v1
