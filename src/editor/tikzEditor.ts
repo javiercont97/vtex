@@ -343,7 +343,7 @@ export class TikZEditor {
             const os = require('os');
             const crypto = require('crypto');
             
-            const tempDir = path.join(os.tmpdir(), 'vtex-tikz-editor');
+            const tempDir = path.join(os.tmpdir(), 'intex-tikz-editor');
             if (!fs.existsSync(tempDir)) {
                 fs.mkdirSync(tempDir, { recursive: true });
             }

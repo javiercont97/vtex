@@ -109,7 +109,7 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
             } else {
                 // Create new panel (without stealing focus)
                 panel = vscode.window.createWebviewPanel(
-                    'vtexPdfPreview',
+                    'intexPdfPreview',
                     `PDF: ${docName}`,
                     { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
                     {
@@ -157,7 +157,7 @@ export class PDFPreview implements vscode.CustomReadonlyEditorProvider {
                             const document = await vscode.workspace.openTextDocument(docUri);
                             const editor = await vscode.window.showTextDocument(document, vscode.ViewColumn.One, true);
                             const line = editor.selection.active.line;
-                            await vscode.commands.executeCommand('vtex.synctex.forwardSearch');
+                            await vscode.commands.executeCommand('intex.synctex.forwardSearch');
                         }
                     }
                 },

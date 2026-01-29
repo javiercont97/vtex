@@ -71,10 +71,10 @@ export class EquationEditor {
      */
     public registerCommands(): vscode.Disposable[] {
         return [
-            vscode.commands.registerCommand('vtex.openEquationEditor', (equation?: string, range?: vscode.Range, mode?: 'inline' | 'display' | 'equation') => 
+            vscode.commands.registerCommand('intex.openEquationEditor', (equation?: string, range?: vscode.Range, mode?: 'inline' | 'display' | 'equation') => 
                 this.openEditor(equation, range, mode)),
-            vscode.commands.registerCommand('vtex.insertMathSymbol', () => this.insertMathSymbol()),
-            vscode.commands.registerCommand('vtex.wrapInMath', () => this.wrapInMath())
+            vscode.commands.registerCommand('intex.insertMathSymbol', () => this.insertMathSymbol()),
+            vscode.commands.registerCommand('intex.wrapInMath', () => this.wrapInMath())
         ];
     }
 

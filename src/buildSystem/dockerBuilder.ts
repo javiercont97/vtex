@@ -12,7 +12,7 @@ const execAsync = promisify(exec);
 
 export class DockerBuilder implements IBuilder {
     private errorParser: ErrorParser;
-    private volumeName = 'vtex-texlive-cache';
+    private volumeName = 'intex-texlive-cache';
 
     constructor(
         private config: Config,

@@ -54,7 +54,7 @@ export class BibTeXEditor {
             this.panel.reveal(vscode.ViewColumn.One);
         } else {
             this.panel = vscode.window.createWebviewPanel(
-                'vtexBibtexEditor',
+                'intexBibtexEditor',
                 `Edit BibTeX Entry`,
                 vscode.ViewColumn.One,
                 {

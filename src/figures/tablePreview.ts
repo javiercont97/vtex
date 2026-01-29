@@ -61,7 +61,7 @@ export class TablePreview {
             
             // Create temp directory
             const tempDir = await fs.promises.mkdtemp(
-                path.join(os.tmpdir(), 'vtex-table-')
+                path.join(os.tmpdir(), 'intex-table-')
             );
             
             try {

@@ -31,7 +31,7 @@ export class TexlabInstaller {
     private async getLatestVersion(): Promise<string | null> {
         return new Promise((resolve) => {
             https.get('https://api.github.com/repos/latex-lsp/texlab/releases/latest', {
-                headers: { 'User-Agent': 'VTeX-VSCode-Extension' }
+                headers: { 'User-Agent': 'InTeX-VSCode-Extension' }
             }, (res) => {
                 let data = '';
                 res.on('data', chunk => data += chunk);
@@ -147,7 +147,7 @@ export class TexlabInstaller {
             const file = fs.createWriteStream(destination);
             
             https.get(url, {
-                headers: { 'User-Agent': 'VTeX-VSCode-Extension' }
+                headers: { 'User-Agent': 'InTeX-VSCode-Extension' }
             }, (response) => {
                 // Follow redirects
                 if (response.statusCode === 301 || response.statusCode === 302) {
@@ -214,7 +214,7 @@ export class TexlabInstaller {
                 return;
             }
 
-            const config = vscode.workspace.getConfiguration('vtex');
+            const config = vscode.workspace.getConfiguration('intex');
             const lspEnabled = config.get<boolean>('lsp.enabled', true);
             
             if (!lspEnabled) {
@@ -222,7 +222,7 @@ export class TexlabInstaller {
             }
 
             const choice = await vscode.window.showInformationMessage(
-                'VTeX: texlab LSP server is not installed. Would you like to download it for enhanced editing features?',
+                'InTeX: texlab LSP server is not installed. Would you like to download it for enhanced editing features?',
                 'Install',
                 'Not Now',
                 'Don\'t Ask Again'

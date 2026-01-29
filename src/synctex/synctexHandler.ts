@@ -254,7 +254,7 @@ export class SyncTexHandler {
         } else {
             // Fallback: just open the PDF without position
             const uri = vscode.Uri.file(pdfPath);
-            await vscode.commands.executeCommand('vtex.viewPdf');
+            await vscode.commands.executeCommand('intex.viewPdf');
         }
     }
 

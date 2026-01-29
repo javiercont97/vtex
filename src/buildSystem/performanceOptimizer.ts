@@ -332,9 +332,9 @@ export class PerformanceOptimizer {
      */
     public registerCommands(): vscode.Disposable[] {
         return [
-            vscode.commands.registerCommand('vtex.clearBuildCache', () => this.clearAllCaches()),
-            vscode.commands.registerCommand('vtex.showCacheStats', () => this.showCacheStats()),
-            vscode.commands.registerCommand('vtex.toggleIncrementalBuild', () => this.toggleIncrementalBuild())
+            vscode.commands.registerCommand('intex.clearBuildCache', () => this.clearAllCaches()),
+            vscode.commands.registerCommand('intex.showCacheStats', () => this.showCacheStats()),
+            vscode.commands.registerCommand('intex.toggleIncrementalBuild', () => this.toggleIncrementalBuild())
         ];
     }
 
@@ -354,7 +354,7 @@ export class PerformanceOptimizer {
      * Toggle incremental build feature
      */
     private async toggleIncrementalBuild(): Promise<void> {
-        const config = vscode.workspace.getConfiguration('vtex');
+        const config = vscode.workspace.getConfiguration('intex');
         const current = config.get('enableIncrementalBuild', true);
         await config.update('enableIncrementalBuild', !current, vscode.ConfigurationTarget.Global);
         

@@ -15,8 +15,8 @@ export class PlotGenerator {
      */
     public registerCommands(): vscode.Disposable[] {
         return [
-            vscode.commands.registerCommand('vtex.generatePlot', () => this.generatePlot()),
-            vscode.commands.registerCommand('vtex.insertPgfplotsTemplate', () => this.insertPgfplotsTemplate())
+            vscode.commands.registerCommand('intex.generatePlot', () => this.generatePlot()),
+            vscode.commands.registerCommand('intex.insertPgfplotsTemplate', () => this.insertPgfplotsTemplate())
         ];
     }
 

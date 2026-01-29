@@ -18,7 +18,7 @@ import { FigureManager } from './figures/figureManager';
 import { TikZPreview } from './figures/tikzPreview';
 import { PlotGenerator } from './figures/plotGenerator';
 import { EquationEditor } from './editor/equationEditor';
-import { GrammarChecker } from './editor/grammarChecker';
+
 import { TableEditor } from './editor/tableEditor';
 import { MacroWizard } from './editor/macroWizard';
 import { PerformanceOptimizer } from './buildSystem/performanceOptimizer';
@@ -53,7 +53,7 @@ let figureManager: FigureManager;
 let tikzPreview: TikZPreview;
 let plotGenerator: PlotGenerator;
 let equationEditor: EquationEditor;
-let grammarChecker: GrammarChecker;
+
 let tableEditor: TableEditor;
 let macroWizard: MacroWizard;
 let performanceOptimizer: PerformanceOptimizer;
@@ -77,9 +77,9 @@ let logger: Logger;
 
 export async function activate(context: vscode.ExtensionContext) {
     // Initialize output channel and logger
-    outputChannel = vscode.window.createOutputChannel('VTeX');
+    outputChannel = vscode.window.createOutputChannel('InTeX');
     logger = new Logger(outputChannel);
-    logger.info('VTeX extension activating...');
+    logger.info('InTeX extension activating...');
 
     // Initialize configuration
     const config = new Config();
@@ -90,7 +90,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Initialize build system asynchronously (don't block activation)
     buildSystem.initialize().catch(error => {
         logger.error(`Failed to initialize build system: ${error}`);
-        vscode.window.showErrorMessage(`VTeX: Failed to initialize build system. ${error}`);
+        vscode.window.showErrorMessage(`InTeX: Failed to initialize build system. ${error}`);
     });
 
     // Initialize PDF previews (both viewers)
@@ -119,7 +119,7 @@ export async function activate(context: vscode.ExtensionContext) {
     tikzPreview.setBuildSystem(buildSystem); // Connect to build system
     plotGenerator = new PlotGenerator(context, logger);
     equationEditor = new EquationEditor(context, logger);
-    grammarChecker = new GrammarChecker(context, logger);
+
     tableEditor = new TableEditor(context, logger);
     macroWizard = new MacroWizard(context, logger);
     performanceOptimizer = new PerformanceOptimizer(context, logger);
@@ -231,7 +231,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Register custom editor for PDF files
     context.subscriptions.push( 
-        vscode.window.registerCustomEditorProvider('vtex.pdfPreview', pdfPreview, {
+        vscode.window.registerCustomEditorProvider('intex.pdfPreview', pdfPreview, {
             webviewOptions: {
                 retainContextWhenHidden: true
             },
@@ -248,13 +248,13 @@ export async function activate(context: vscode.ExtensionContext) {
     // Show status bar
     createStatusBar(context);
 
-    logger.info('VTeX extension activated successfully');
+    logger.info('InTeX extension activated successfully');
 }
 
 function registerCommands(context: vscode.ExtensionContext, config: Config) {
     // Build command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.build', async () => {
+        vscode.commands.registerCommand('intex.build', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.document.languageId !== 'latex') {
                 vscode.window.showWarningMessage('No active LaTeX document');
@@ -267,7 +267,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Clean command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.clean', async () => {
+        vscode.commands.registerCommand('intex.clean', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.document.languageId !== 'latex') {
                 vscode.window.showWarningMessage('No active LaTeX document');
@@ -281,7 +281,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Clean and build command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.cleanBuild', async () => {
+        vscode.commands.registerCommand('intex.cleanBuild', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.document.languageId !== 'latex') {
                 vscode.window.showWarningMessage('No active LaTeX document');
@@ -296,7 +296,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // View PDF command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.viewPdf', async () => {
+        vscode.commands.registerCommand('intex.viewPdf', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.document.languageId !== 'latex') {
                 vscode.window.showWarningMessage('No active LaTeX document');
@@ -309,14 +309,14 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Select builder command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.selectBuilder', async () => {
+        vscode.commands.registerCommand('intex.selectBuilder', async () => {
             const options = ['auto', 'local', 'docker'];
             const selected = await vscode.window.showQuickPick(options, {
                 placeHolder: 'Select build method'
             });
             
             if (selected) {
-                await vscode.workspace.getConfiguration('vtex').update(
+                await vscode.workspace.getConfiguration('intex').update(
                     'buildMethod',
                     selected,
                     vscode.ConfigurationTarget.Workspace
@@ -329,7 +329,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Detect environment command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.detectEnvironment', async () => {
+        vscode.commands.registerCommand('intex.detectEnvironment', async () => {
             const info = await buildSystem.getEnvironmentInfo();
             vscode.window.showInformationMessage(info);
         })
@@ -337,7 +337,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Install/Update texlab command
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.installTexlab', async () => {
+        vscode.commands.registerCommand('intex.installTexlab', async () => {
             const installer = new TexlabInstaller(context, logger);
             const currentVersion = await installer.getInstalledVersion();
             
@@ -393,7 +393,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Forward search (editor → PDF) with SyncTeX
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.synctex.forwardSearch', async () => {
+        vscode.commands.registerCommand('intex.synctex.forwardSearch', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.document.languageId !== 'latex') {
                 vscode.window.showWarningMessage('No active LaTeX document');
@@ -407,7 +407,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Phase 3: Project Templates
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.newFromTemplate', async () => {
+        vscode.commands.registerCommand('intex.newFromTemplate', async () => {
             // Show template picker
             const templates = templateManager.getTemplates();
             const items = templates.map(t => ({
@@ -448,7 +448,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Phase 3: Insert Citation
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.insertCitation', async () => {
+        vscode.commands.registerCommand('intex.insertCitation', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.document.languageId !== 'latex') {
                 vscode.window.showWarningMessage('No active LaTeX document');
@@ -464,7 +464,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // BibTeX Editor
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.editBibtexEntry', async () => {
+        vscode.commands.registerCommand('intex.editBibtexEntry', async () => {
             // Get active .bib file or let user choose
             const editor = vscode.window.activeTextEditor;
             let bibFile: string | undefined;
@@ -532,7 +532,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Phase 3: Find Root File
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.findRootFile', async () => {
+        vscode.commands.registerCommand('intex.findRootFile', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.document.languageId !== 'latex') {
                 vscode.window.showWarningMessage('No active LaTeX document');
@@ -547,7 +547,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Phase 3: Analyze Project
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.analyzeProject', async () => {
+        vscode.commands.registerCommand('intex.analyzeProject', async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.document.languageId !== 'latex') {
                 vscode.window.showWarningMessage('No active LaTeX document');
@@ -602,7 +602,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
     // Phase 4: TikZ Editor (Experimental)
     if (config.getExperimentalTikZEditor() && tikzEditor) {
         context.subscriptions.push(
-            vscode.commands.registerCommand('vtex.openTikZEditor', async (uri?: vscode.Uri, range?: vscode.Range) => {
+            vscode.commands.registerCommand('intex.openTikZEditor', async (uri?: vscode.Uri, range?: vscode.Range) => {
                 if (uri && range) {
                     const document = await vscode.workspace.openTextDocument(uri);
                     const tikzCode = document.getText(range);
@@ -617,7 +617,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Phase 4: Figure Editor
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.openFigureEditor', async (uri?: vscode.Uri, range?: vscode.Range) => {
+        vscode.commands.registerCommand('intex.openFigureEditor', async (uri?: vscode.Uri, range?: vscode.Range) => {
             if (uri && range) {
                 // Extract figure properties from the range
                 const document = await vscode.workspace.openTextDocument(uri);
@@ -645,7 +645,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
 
     // Phase 4: Figure CodeLens commands
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.editFigureCaption', async (uri: vscode.Uri, range: vscode.Range) => {
+        vscode.commands.registerCommand('intex.editFigureCaption', async (uri: vscode.Uri, range: vscode.Range) => {
             const document = await vscode.workspace.openTextDocument(uri);
             const figureText = document.getText(range);
             
@@ -686,7 +686,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.changeImagePath', async (uri: vscode.Uri, range: vscode.Range) => {
+        vscode.commands.registerCommand('intex.changeImagePath', async (uri: vscode.Uri, range: vscode.Range) => {
             const document = await vscode.workspace.openTextDocument(uri);
             const text = document.getText(range);
             
@@ -736,7 +736,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.previewTikzInFigure', async (uri: vscode.Uri, range: vscode.Range) => {
+        vscode.commands.registerCommand('intex.previewTikzInFigure', async (uri: vscode.Uri, range: vscode.Range) => {
             const document = await vscode.workspace.openTextDocument(uri);
             const figureText = document.getText(range);
             
@@ -751,7 +751,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.previewTikzStandalone', async (uri: vscode.Uri, range: vscode.Range) => {
+        vscode.commands.registerCommand('intex.previewTikzStandalone', async (uri: vscode.Uri, range: vscode.Range) => {
             const document = await vscode.workspace.openTextDocument(uri);
             const tikzText = document.getText(range);
             
@@ -765,13 +765,13 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.editTikz', async (uri: vscode.Uri, range: vscode.Range) => {
+        vscode.commands.registerCommand('intex.editTikz', async (uri: vscode.Uri, range: vscode.Range) => {
             vscode.window.showInformationMessage('TikZ editor coming soon! For now, use Preview TikZ to see your changes.');
         })
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('vtex.wrapInFigure', async (uri: vscode.Uri, range: vscode.Range) => {
+        vscode.commands.registerCommand('intex.wrapInFigure', async (uri: vscode.Uri, range: vscode.Range) => {
             const document = await vscode.workspace.openTextDocument(uri);
             const content = document.getText(range);
             
@@ -788,8 +788,7 @@ function registerCommands(context: vscode.ExtensionContext, config: Config) {
         })
     );
 
-    // Phase 4: Grammar Checker
-    context.subscriptions.push(...grammarChecker.registerCommands());
+
 
     // Phase 4: Table Editor
     context.subscriptions.push(...tableEditor.registerCommands());
@@ -832,7 +831,7 @@ function setupAutoBuild(context: vscode.ExtensionContext, config: Config) {
  * Helper to show PDF with the configured viewer
  */
 async function showPDFWithConfiguredViewer(documentUri: vscode.Uri, position?: { page: number; x: number; y: number }): Promise<void> {
-    const config = vscode.workspace.getConfiguration('vtex');
+    const config = vscode.workspace.getConfiguration('intex');
     const viewerType = config.get<string>('pdfViewer', 'pdfjs');
 
     if (viewerType === 'native') {
@@ -857,8 +856,8 @@ function createStatusBar(context: vscode.ExtensionContext) {
         vscode.StatusBarAlignment.Left,
         100
     );
-    statusBarItem.command = 'vtex.build';
-    statusBarItem.text = '$(tools) VTeX: Build';
+    statusBarItem.command = 'intex.build';
+    statusBarItem.text = '$(tools) InTeX: Build';
     statusBarItem.tooltip = 'Build LaTeX document';
     statusBarItem.show();
 

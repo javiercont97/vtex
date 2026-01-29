@@ -1,5 +1,5 @@
-# Example custom Docker image for VTeX
-# This is optional - VTeX works with the default texlive/texlive:latest
+# Example custom Docker image for ∫TeX
+# This is optional - ∫TeX works with the default texlive/texlive:latest
 
 FROM texlive/texlive:latest
 

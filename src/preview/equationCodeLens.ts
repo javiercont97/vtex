@@ -49,7 +49,7 @@ export class EquationCodeLensProvider implements vscode.CodeLensProvider {
                 
                 const codeLens = new vscode.CodeLens(codeLensRange, {
                     title: '✏️ Edit Equation',
-                    command: 'vtex.openEquationEditor',
+                    command: 'intex.openEquationEditor',
                     arguments: [equation, fullRange, pattern.type]
                 });
                 

@@ -74,7 +74,7 @@ export class TableHoverProvider implements vscode.HoverProvider {
         markdown.isTrusted = true;
         
         // Get config for max dimensions
-        const config = vscode.workspace.getConfiguration('vtex');
+        const config = vscode.workspace.getConfiguration('intex');
         const maxWidth = config.get<number>('table.maxPreviewWidth', 400);
         const maxHeight = config.get<number>('table.maxPreviewHeight', 300);
         

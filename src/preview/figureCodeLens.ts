@@ -22,7 +22,7 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
         const text = document.getText();
         
         // Check if TikZ editor experimental feature is enabled
-        const config = vscode.workspace.getConfiguration('vtex');
+        const config = vscode.workspace.getConfiguration('intex');
         const tikzEditorEnabled = config.get<boolean>('experimental.enableTikZEditor', false);
 
         // Find figure environments
@@ -47,7 +47,7 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
                     new vscode.CodeLens(codeLensRange, {
                         title: '🖼️ Edit Figure',
                         tooltip: 'Open figure editor',
-                        command: 'vtex.openFigureEditor',
+                        command: 'intex.openFigureEditor',
                         arguments: [document.uri, fullRange]
                     })
                 );
@@ -61,7 +61,7 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
                         new vscode.CodeLens(codeLensRange, {
                             title: '✏️ Edit TikZ',
                             tooltip: 'Open TikZ WYSIWYG editor (Experimental)',
-                            command: 'vtex.openTikZEditor',
+                            command: 'intex.openTikZEditor',
                             arguments: [document.uri, fullRange]
                         })
                     );
@@ -73,7 +73,7 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
                     new vscode.CodeLens(codeLensRange, {
                         title: '📂 Change Image',
                         tooltip: 'Browse and change image file',
-                        command: 'vtex.changeImagePath',
+                        command: 'intex.changeImagePath',
                         arguments: [document.uri, fullRange]
                     })
                 );
@@ -84,7 +84,7 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
                 new vscode.CodeLens(codeLensRange, {
                     title: '💬 Edit Caption',
                     tooltip: 'Edit figure caption',
-                    command: 'vtex.editFigureCaption',
+                    command: 'intex.editFigureCaption',
                     arguments: [document.uri, fullRange]
                 })
             );
@@ -118,7 +118,7 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
                     new vscode.CodeLens(codeLensRange, {
                         title: '🖼️ Wrap in Figure',
                         tooltip: 'Wrap image in figure environment',
-                        command: 'vtex.wrapInFigure',
+                        command: 'intex.wrapInFigure',
                         arguments: [document.uri, fullRange]
                     })
                 );
@@ -127,7 +127,7 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
                     new vscode.CodeLens(codeLensRange, {
                         title: '📂 Change Image',
                         tooltip: 'Browse and change image file',
-                        command: 'vtex.changeImagePath',
+                        command: 'intex.changeImagePath',
                         arguments: [document.uri, fullRange]
                     })
                 );
@@ -154,7 +154,7 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
                         new vscode.CodeLens(codeLensRange, {
                             title: '✏️ Edit TikZ',
                             tooltip: 'Open TikZ WYSIWYG editor (Experimental)',
-                            command: 'vtex.openTikZEditor',
+                            command: 'intex.openTikZEditor',
                             arguments: [document.uri, fullRange]
                         })
                     );
@@ -164,7 +164,7 @@ export class FigureCodeLensProvider implements vscode.CodeLensProvider {
                     new vscode.CodeLens(codeLensRange, {
                         title: '🖼️ Wrap in Figure',
                         tooltip: 'Wrap TikZ in figure environment',
-                        command: 'vtex.wrapInFigure',
+                        command: 'intex.wrapInFigure',
                         arguments: [document.uri, fullRange]
                     })
                 );

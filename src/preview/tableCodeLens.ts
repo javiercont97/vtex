@@ -30,7 +30,7 @@ export class TableCodeLensProvider implements vscode.CodeLensProvider {
             // Add "Edit Table" CodeLens
             const editLens = new vscode.CodeLens(table.range, {
                 title: '✏️ Edit Table',
-                command: 'vtex.openTableEditor',
+                command: 'intex.openTableEditor',
                 arguments: [table.content, table.range]
             });
             codeLenses.push(editLens);

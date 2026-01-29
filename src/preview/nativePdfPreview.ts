@@ -37,7 +37,7 @@ export class NativePDFPreview {
             } else {
                 // Create new panel
                 panel = vscode.window.createWebviewPanel(
-                    'vtexNativePdfPreview',
+                    'intexNativePdfPreview',
                     path.basename(pdfPath),
                     {
                         viewColumn: vscode.ViewColumn.Beside,

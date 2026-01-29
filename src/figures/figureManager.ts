@@ -43,10 +43,10 @@ export class FigureManager {
      */
     public registerCommands(): vscode.Disposable[] {
         return [
-            vscode.commands.registerCommand('vtex.insertFigure', () => this.insertFigure()),
-            vscode.commands.registerCommand('vtex.previewFigure', () => this.previewFigure()),
-            vscode.commands.registerCommand('vtex.showAllFigures', () => this.showAllFigures()),
-            vscode.commands.registerCommand('vtex.toggleInlinePreviews', () => this.toggleInlinePreviews())
+            vscode.commands.registerCommand('intex.insertFigure', () => this.insertFigure()),
+            vscode.commands.registerCommand('intex.previewFigure', () => this.previewFigure()),
+            vscode.commands.registerCommand('intex.showAllFigures', () => this.showAllFigures()),
+            vscode.commands.registerCommand('intex.toggleInlinePreviews', () => this.toggleInlinePreviews())
         ];
     }
 
@@ -267,7 +267,7 @@ export class FigureManager {
      * Toggle inline image previews
      */
     private async toggleInlinePreviews(): Promise<void> {
-        const config = vscode.workspace.getConfiguration('vtex');
+        const config = vscode.workspace.getConfiguration('intex');
         const current = config.get('figureInlinePreviews', false);
         await config.update('figureInlinePreviews', !current, vscode.ConfigurationTarget.Global);
         
@@ -288,7 +288,7 @@ export class FigureManager {
             return;
         }
 
-        const config = vscode.workspace.getConfiguration('vtex');
+        const config = vscode.workspace.getConfiguration('intex');
         if (!config.get('figureInlinePreviews', false)) {
             return;
         }

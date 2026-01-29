@@ -29,7 +29,7 @@ export class InlineDecorator {
 
     public registerCommands(): vscode.Disposable[] {
         return [
-            vscode.commands.registerCommand('vtex.toggleInlineDecorations', () => this.toggle()),
+            vscode.commands.registerCommand('intex.toggleInlineDecorations', () => this.toggle()),
             vscode.workspace.onDidChangeTextDocument(e => {
                 if (this.isActive && e.document.languageId === 'latex') {
                     this.scheduleUpdate();

@@ -182,10 +182,10 @@ export class TableEditor {
      */
     public registerCommands(): vscode.Disposable[] {
         return [
-            vscode.commands.registerCommand('vtex.openTableEditor', (code?: string, range?: vscode.Range) => 
+            vscode.commands.registerCommand('intex.openTableEditor', (code?: string, range?: vscode.Range) => 
                 this.openEditor(code, range)),
-            vscode.commands.registerCommand('vtex.editTableAtCursor', () => this.openEditor()),
-            vscode.commands.registerCommand('vtex.insertTableTemplate', () => this.insertTableTemplate())
+            vscode.commands.registerCommand('intex.editTableAtCursor', () => this.openEditor()),
+            vscode.commands.registerCommand('intex.insertTableTemplate', () => this.insertTableTemplate())
         ];
     }
 

@@ -25,7 +25,7 @@ export class TikZPreview {
         private readonly context: vscode.ExtensionContext,
         private readonly logger: Logger
     ) {
-        this.tempDir = path.join(os.tmpdir(), 'vtex-tikz');
+        this.tempDir = path.join(os.tmpdir(), 'intex-tikz');
         if (!fs.existsSync(this.tempDir)) {
             fs.mkdirSync(this.tempDir, { recursive: true });
         }
@@ -43,9 +43,9 @@ export class TikZPreview {
      */
     public registerCommands(): vscode.Disposable[] {
         return [
-            vscode.commands.registerCommand('vtex.previewTikz', () => this.previewTikzAtCursor()),
-            vscode.commands.registerCommand('vtex.compileTikzStandalone', () => this.compileTikzStandalone()),
-            vscode.commands.registerCommand('vtex.insertTikzTemplate', () => this.insertTikzTemplate())
+            vscode.commands.registerCommand('intex.previewTikz', () => this.previewTikzAtCursor()),
+            vscode.commands.registerCommand('intex.compileTikzStandalone', () => this.compileTikzStandalone()),
+            vscode.commands.registerCommand('intex.insertTikzTemplate', () => this.insertTikzTemplate())
         ];
     }
 

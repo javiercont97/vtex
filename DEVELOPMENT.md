@@ -1,4 +1,4 @@
-# VTeX Development Guide
+# ∫TeX Development Guide
 
 ## Getting Started
 
@@ -27,7 +27,7 @@ npm run watch
 ### Debugging
 - Set breakpoints in TypeScript files
 - Use Debug Console in the main VS Code window
-- Check Output channel "VTeX" for logs
+- Check Output channel "InTeX" for logs
 
 ## Project Architecture
 
@@ -83,14 +83,14 @@ Create `test/sample.tex`:
 ```latex
 \\documentclass{article}
 \\begin{document}
-Hello, VTeX!
+Hello, ∫TeX!
 \\end{document}
 ```
 
 ## Common Issues
 
 ### Build Fails
-- Check Output channel "VTeX" for detailed logs
+- Check Output channel "InTeX" for detailed logs
 - Verify LaTeX installation: `pdflatex --version`
 - Verify Docker: `docker --version`
 - Check file permissions
@@ -101,7 +101,7 @@ Hello, VTeX!
 docker volume ls
 
 # Remove cache volume to reset
-docker volume rm vtex-texlive-cache
+docker volume rm intex-texlive-cache
 ```
 
 ## Code Style

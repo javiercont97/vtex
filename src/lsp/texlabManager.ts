@@ -19,14 +19,14 @@ export class TexlabManager {
     /**
      * Get the resolved path to the texlab binary.
      * Priority:
-     * 1. VS Code configuration (vtex.texlab.path)
+     * 1. VS Code configuration (intex.texlab.path)
      * 2. Global storage (downloaded by extension)
      * 3. Bundled binary (legacy support)
      * 4. PATH environment variable
      */
     public async getTexlabPath(): Promise<string | null> {
         // 1. Check configuration
-        const config = vscode.workspace.getConfiguration('vtex');
+        const config = vscode.workspace.getConfiguration('intex');
         const customPath = config.get<string>('texlab.path');
         if (customPath && await this.fileExists(customPath)) {
             this.logger?.info(`Using configured texlab path: ${customPath}`);

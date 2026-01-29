@@ -24,9 +24,9 @@ export class MacroWizard {
      */
     public registerCommands(): vscode.Disposable[] {
         return [
-            vscode.commands.registerCommand('vtex.createMacro', () => this.openWizard()),
-            vscode.commands.registerCommand('vtex.insertCommonMacros', () => this.insertCommonMacros()),
-            vscode.commands.registerCommand('vtex.extractMacro', () => this.extractMacro())
+            vscode.commands.registerCommand('intex.createMacro', () => this.openWizard()),
+            vscode.commands.registerCommand('intex.insertCommonMacros', () => this.insertCommonMacros()),
+            vscode.commands.registerCommand('intex.extractMacro', () => this.extractMacro())
         ];
     }
 

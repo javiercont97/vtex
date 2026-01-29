@@ -4,11 +4,11 @@ export class Config {
     private config: vscode.WorkspaceConfiguration;
 
     constructor() {
-        this.config = vscode.workspace.getConfiguration('vtex');
+        this.config = vscode.workspace.getConfiguration('intex');
     }
 
     refresh(): void {
-        this.config = vscode.workspace.getConfiguration('vtex');
+        this.config = vscode.workspace.getConfiguration('intex');
     }
 
     getBuildMethod(): 'auto' | 'local' | 'docker' {

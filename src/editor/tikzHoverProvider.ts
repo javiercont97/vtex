@@ -67,7 +67,7 @@ export class TikZHoverProvider implements vscode.HoverProvider {
         markdown.appendMarkdown(`---\n\n`);
         
         // Check if TikZ editor is enabled
-        const config = vscode.workspace.getConfiguration('vtex');
+        const config = vscode.workspace.getConfiguration('intex');
         const tikzEditorEnabled = config.get<boolean>('experimental.enableTikZEditor', false);
         
         if (tikzEditorEnabled) {
